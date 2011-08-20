@@ -20,6 +20,8 @@ using Microsoft.Build.Exceptions;
 using MSBuild = Microsoft.Build.Evaluation;
 using StringPair = System.Tuple<string, string>;
 
+using Microsoft.Win32;
+
 namespace ICSharpCode.SharpDevelop.Project
 {
 	/// <summary>
@@ -137,6 +139,35 @@ namespace ICSharpCode.SharpDevelop.Project
 		public override void ResolveAssemblyReferences()
 		{
 			MSBuildInternals.ResolveAssemblyReferences(this, null);
+		}
+		
+		private void UpdateProjectForPrimaryInterop(bool bUseComReference) {
+			foreach (ProjectItemElement item in projectFile.Items) {
+				if (!item.HasMetadata) {
+					continue;
+				}
+
+				if ((from data in item.Metadata
+				     where ((data.Name == "WrapperTool") && (data.Value == "primary"))
+				     select data).Count() > 0) {
+					
+					string guid = (from data in item.Metadata 
+					               where (data.Name == "Guid")
+					               select data.Value).Single();
+					
+					TypeLibrary lib = TypeLibrary.Create(guid);
+					if (bUseComReference) {
+						// Change the COMReferences which have Primary Interops back to COMReference
+						item.ItemType = "COMReference";
+						item.Include = lib.Name;
+					}
+					else {
+						// Change the COMReferences which have Primary Interops to Reference
+						item.ItemType = "Reference";
+						item.Include = lib.PrimaryInteropName;
+					}
+				}
+			}
 		}
 		
 		#region CreateProjectItem
@@ -1203,6 +1234,7 @@ namespace ICSharpCode.SharpDevelop.Project
 			this.ActivePlatform = loadInformation.Platform;
 			
 			projectFile = ProjectRootElement.Open(loadInformation.FileName, projectCollection);
+			UpdateProjectForPrimaryInterop(false);
 			
 			string userFileName = loadInformation.FileName + ".user";
 			if (File.Exists(userFileName)) {
@@ -1244,7 +1276,11 @@ namespace ICSharpCode.SharpDevelop.Project
 				// we need the global lock - if the file is being renamed,
 				// MSBuild will update the global project collection
 				lock (MSBuildInternals.SolutionProjectCollectionLock) {
+					
+					UpdateProjectForPrimaryInterop(true);
 					projectFile.Save(fileName);
+					UpdateProjectForPrimaryInterop(false);
+					
 					//bool userProjectDirty = userProjectFile.HasUnsavedChanges;
 					string userFile = fileName + ".user";
 					if (File.Exists(userFile) || userProjectFile.Count > 0) {

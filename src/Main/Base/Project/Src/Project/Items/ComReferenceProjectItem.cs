@@ -4,6 +4,7 @@
 using System;
 using System.ComponentModel;
 using System.IO;
+using ICSharpCode.SharpDevelop.Dom;
 
 namespace ICSharpCode.SharpDevelop.Project
 {
@@ -22,6 +23,10 @@ namespace ICSharpCode.SharpDevelop.Project
 			this.WrapperTool  = library.WrapperTool;
 			this.Isolated     = library.Isolated;
 			this.DefaultCopyLocalValue = true;
+			
+			if (this.WrapperTool == "primary") {
+				this.Include = library.PrimaryInteropName;
+			}
 		}
 		
 		internal ComReferenceProjectItem(IProject project, IProjectItemBackendStore buildItem)
@@ -96,6 +101,10 @@ namespace ICSharpCode.SharpDevelop.Project
 		public override string FileName {
 			get {
 				try {
+					if (WrapperTool == "primary") {
+						return base.FileName;
+					}
+					
 					if (Project != null && Project.OutputAssemblyFullPath != null) {
 						string outputFolder = Path.GetDirectoryName(Project.OutputAssemblyFullPath);
 						string interopFileName = Path.Combine(outputFolder, String.Concat("Interop.", Include, ".dll"));
@@ -127,6 +136,9 @@ namespace ICSharpCode.SharpDevelop.Project
 				return Include;
 			}
 			set {
+				if (WrapperTool == "primary") {
+					base.FileName = value;
+				}
 			}
 		}
 		

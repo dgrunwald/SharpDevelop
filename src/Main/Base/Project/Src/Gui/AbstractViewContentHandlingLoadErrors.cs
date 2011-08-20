@@ -85,6 +85,7 @@ namespace ICSharpCode.SharpDevelop.Gui
 				errorTextBox = new TextBox();
 				errorTextBox.IsReadOnly = true;
 				errorTextBox.Background = SystemColors.WindowBrush;
+				errorTextBox.VerticalScrollBarVisibility = ScrollBarVisibility.Auto;
 			}
 			errorTextBox.Text = String.Concat(this.LoadErrorHeaderText, ex.ToString());
 			contentControl.SetContent(errorTextBox, this);
