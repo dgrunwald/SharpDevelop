@@ -563,10 +563,6 @@ namespace ICSharpCode.SharpDevelop.Project
 		public virtual IEnumerable<CompilerVersion> GetAvailableCompilerVersions()
 		{
 			List<CompilerVersion> versions = new List<CompilerVersion>();
-			if (DotnetDetection.IsDotnet35SP1Installed()) {
-				versions.Add(msbuild20);
-				versions.Add(msbuild35);
-			}
 			versions.Add(msbuild40);
 			return versions;
 		}

@@ -20,7 +20,6 @@ namespace ICSharpCode.SharpDevelop.Project
 		readonly string workerProcessName;
 		
 		public static readonly BuildWorkerManager MSBuild40 = new BuildWorkerManager("ICSharpCode.SharpDevelop.BuildWorker40.exe");
-		public static readonly BuildWorkerManager MSBuild35 = new BuildWorkerManager("ICSharpCode.SharpDevelop.BuildWorker35.exe");
 		
 		private BuildWorkerManager(string workerProcessName)
 		{

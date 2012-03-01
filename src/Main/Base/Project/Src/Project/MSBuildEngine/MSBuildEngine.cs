@@ -264,16 +264,7 @@ namespace ICSharpCode.SharpDevelop.Project
 				logger.Initialize(eventSource);
 			}
 			
-			if (projectMinimumSolutionVersion <= Solution.SolutionVersionVS2008) {
-				if (DotnetDetection.IsDotnet35SP1Installed()) {
-					BuildWorkerManager.MSBuild35.RunBuildJob(job, loggerChain, OnDone, feedbackSink.ProgressMonitor.CancellationToken);
-				} else {
-					loggerChain.HandleError(new BuildError(job.ProjectFileName, ".NET 3.5 SP1 is required to build this project."));
-					OnDone(false);
-				}
-			} else {
-				BuildWorkerManager.MSBuild40.RunBuildJob(job, loggerChain, OnDone, feedbackSink.ProgressMonitor.CancellationToken);
-			}
+			BuildWorkerManager.MSBuild40.RunBuildJob(job, loggerChain, OnDone, feedbackSink.ProgressMonitor.CancellationToken);
 		}
 		
 		void OnDone(bool success)
