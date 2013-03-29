@@ -106,7 +106,7 @@ namespace ICSharpCode.SharpDevelop.Refactoring
 			if (progressMonitor == null)
 				throw new ArgumentNullException("progressMonitor");
 			var fileName = FileName.Create(variable.Region.FileName);
-			List<Reference> references = new List<Reference>();
+			var references = new ListWithReadOnlySupport<Reference>();
 			await SD.ParserService.FindLocalReferencesAsync(
 				fileName, variable,
 				r => { lock (references) references.Add(r); },
@@ -270,7 +270,7 @@ namespace ICSharpCode.SharpDevelop.Refactoring
 		
 		public Task FindReferencesAsync(SymbolSearchArgs searchArguments, Action<SearchedFile> callback)
 		{
-			return Task.WhenAll(symbolSearches.Select(s => s.FindReferencesAsync(searchArguments, callback)));
+			return TaskEx.WhenAll(symbolSearches.Select(s => s.FindReferencesAsync(searchArguments, callback)));
 		}
 	}
 }

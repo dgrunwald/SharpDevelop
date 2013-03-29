@@ -87,7 +87,7 @@ namespace ICSharpCode.AvalonEdit.AddIn.ContextActions
 			if (SD.ParserService.LoadSolutionProjectsThread.IsRunning)
 				return EmptyList<IContextAction>.Instance;
 			var providerList = providers.ToList();
-			var actions = await Task.WhenAll(providerList.Select(p => p.GetAvailableActionsAsync(this.EditorContext, cancellationToken)));
+			var actions = await TaskEx.WhenAll(providerList.Select(p => p.GetAvailableActionsAsync(this.EditorContext, cancellationToken)));
 			for (int i = 0; i < actions.Length; i++) {
 				if (actions[i] != null) {
 					foreach (var action in actions[i]) {

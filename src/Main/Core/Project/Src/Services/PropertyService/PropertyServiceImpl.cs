@@ -4,6 +4,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Text;
@@ -88,7 +89,7 @@ namespace ICSharpCode.Core
 		}
 		
 		/// <inheritdoc cref="Properties.GetList"/>
-		public IReadOnlyList<T> GetList<T>(string key)
+		public ReadOnlyCollection<T> GetList<T>(string key)
 		{
 			return properties.GetList<T>(key);
 		}

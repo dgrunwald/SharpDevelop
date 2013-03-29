@@ -4,6 +4,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 
 namespace ICSharpCode.Core
@@ -16,7 +17,7 @@ namespace ICSharpCode.Core
 		AddIn       addIn;
 		string      name;
 		Properties  properties;
-		IReadOnlyList<ICondition> conditions;
+		ReadOnlyCollection<ICondition> conditions;
 		
 		public string Name {
 			get {
@@ -60,13 +61,13 @@ namespace ICSharpCode.Core
 			}
 		}
 		
-		public IReadOnlyList<ICondition> Conditions {
+		public ReadOnlyCollection<ICondition> Conditions {
 			get {
 				return conditions;
 			}
 		}
 		
-		public Codon(AddIn addIn, string name, Properties properties, IReadOnlyList<ICondition> conditions)
+		public Codon(AddIn addIn, string name, Properties properties, ReadOnlyCollection<ICondition> conditions)
 		{
 			if (name == null)
 				throw new ArgumentNullException("name");

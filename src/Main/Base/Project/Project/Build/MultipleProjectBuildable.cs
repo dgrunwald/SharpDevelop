@@ -35,7 +35,7 @@ namespace ICSharpCode.SharpDevelop.Project
 		public Task<bool> BuildAsync(ProjectBuildOptions options, IBuildFeedbackSink feedbackSink, IProgressMonitor progressMonitor)
 		{
 			// SharpDevelop already has built our dependencies, so we're done immediately.
-			return Task.FromResult(true);
+			return TaskEx.FromResult(true);
 		}
 		
 		public ProjectBuildOptions CreateProjectBuildOptions(BuildOptions options, bool isRootBuildable)

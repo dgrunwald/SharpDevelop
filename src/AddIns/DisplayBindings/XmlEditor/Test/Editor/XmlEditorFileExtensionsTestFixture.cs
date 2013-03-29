@@ -39,8 +39,8 @@ namespace XmlEditor.Tests.Editor
 				
 				addinTreeNode.AddCodons(
 					new Codon[] {
-						new Codon(addin, "CodeCompletionC#", new Properties(), new ICondition[0]),
-						new Codon(addin, "CodeCompletionXml", properties, new ICondition[0])
+						new Codon(addin, "CodeCompletionC#", new Properties(), Array.AsReadOnly(new ICondition[0])),
+						new Codon(addin, "CodeCompletionXml", properties, Array.AsReadOnly(new ICondition[0]))
 					});
 				
 				fileExtensions = new DefaultXmlFileExtensions(addinTreeNode);

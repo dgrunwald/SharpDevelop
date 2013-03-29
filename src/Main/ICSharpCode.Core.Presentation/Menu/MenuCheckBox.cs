@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Threading;
 using System.Windows;
 using System.Windows.Data;
@@ -18,7 +19,7 @@ namespace ICSharpCode.Core.Presentation
 		// because the IsCheckedChanged event may be a weak event
 		EventHandler isCheckedChangedHandler;
 		
-		public MenuCheckBox(UIElement inputBindingOwner, Codon codon, object caller, IReadOnlyCollection<ICondition> conditions)
+		public MenuCheckBox(UIElement inputBindingOwner, Codon codon, object caller, ReadOnlyCollection<ICondition> conditions)
 			: base(codon, caller, conditions)
 		{
 			this.Command = CommandWrapper.CreateCommand(codon, conditions);

@@ -10,10 +10,10 @@
 		<DataGrid  Background="AliceBlue" x:Name="datagrid"
 		          AutoGenerateColumns="False"
 		          ItemsSource="{Binding Entries}"
-		          AddingNewItem="Datagrid_AddingNewItem"
 		          SelectionChanged="datagrid_SelectionChanged"
 		          CanUserAddRows="True"
 		          CanUserDeleteRows="True">
+			<!-- AddingNewItem="Datagrid_AddingNewItem" -->
 			
 			<DataGrid.Columns>
 				

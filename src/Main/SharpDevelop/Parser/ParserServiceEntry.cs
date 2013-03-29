@@ -315,7 +315,7 @@ namespace ICSharpCode.SharpDevelop.Parser
 						// If full parse info is requested, ensure we have full parse info.
 						if (!(requestFullParseInformation && entries[index].CachedParseInformation == null)) {
 							// We already have the requested version parsed, just return it:
-							return Task.FromResult(entries[index]);
+							return TaskEx.FromResult(entries[index]);
 						}
 					}
 					// Optimization:

@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -19,6 +20,7 @@ using ICSharpCode.NRefactory;
 using ICSharpCode.NRefactory.Editor;
 using ICSharpCode.NRefactory.TypeSystem;
 using ICSharpCode.NRefactory.Utils;
+using ICSharpCode.SharpDevelop;
 using ICSharpCode.SharpDevelop.Dom;
 using ICSharpCode.SharpDevelop.Editor;
 using ICSharpCode.SharpDevelop.Parser;
@@ -140,15 +142,31 @@ namespace ICSharpCode.SharpDevelop
 				list.Add(o);
 		}
 		
-		public static ReadOnlyCollection<T> AsReadOnly<T>(this IList<T> arr)
+		public static ListWithReadOnlySupport<T> ToListWithReadOnlySupport<T>(this IEnumerable<T> source)
 		{
-			return new ReadOnlyCollection<T>(arr);
+			return new ListWithReadOnlySupport<T>(source);
 		}
 		
-		[Obsolete("This method seems to be unused now; all uses I've seen have been replaced with IReadOnlyList<T>")]
+		public static ReadOnlyListWrapper<T> AsReadOnly<T>(this IList<T> list)
+		{
+			return new ReadOnlyListWrapper<T>(list);
+		}
+		
+		public static ReadOnlyDictionaryWrapper<TKey, TValue> AsReadOnly<TKey, TValue>(this IDictionary<TKey, TValue> dict)
+		{
+			return new ReadOnlyDictionaryWrapper<TKey, TValue>(dict);
+		}
+		
 		public static ReadOnlyCollectionWrapper<T> AsReadOnly<T>(this ICollection<T> arr)
 		{
 			return new ReadOnlyCollectionWrapper<T>(arr);
+		}
+		
+		public static V GetOrDefault<K,V>(this IDictionary<K, V> dict, K key)
+		{
+			V ret;
+			dict.TryGetValue(key, out ret);
+			return ret;
 		}
 		
 		public static V GetOrDefault<K,V>(this IReadOnlyDictionary<K, V> dict, K key)
@@ -875,6 +893,18 @@ namespace ICSharpCode.SharpDevelop
 		public static IDocumentLine GetLineForOffset(this IDocument document, int offset)
 		{
 			return document.GetLineByOffset(offset);
+		}
+		#endregion
+		
+		#region .NET 4.5 Compatibility Extensions
+		public static T GetCustomAttribute<T>(this MemberInfo element) where T : Attribute
+		{
+			return (T)element.GetCustomAttribute(typeof(T));
+		}
+		
+		public static Attribute GetCustomAttribute(this MemberInfo element, Type attributeType)
+		{
+			return Attribute.GetCustomAttribute(element, attributeType);
 		}
 		#endregion
 	}

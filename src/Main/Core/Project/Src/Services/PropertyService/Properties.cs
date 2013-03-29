@@ -4,6 +4,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
@@ -78,7 +79,7 @@ namespace ICSharpCode.Core
 		
 		void OnPropertyChanged(string key)
 		{
-			var handler = Volatile.Read(ref PropertyChanged);
+			var handler = this.PropertyChanged;
 			if (handler != null)
 				handler(this, new PropertyChangedEventArgs(key));
 		}
@@ -128,10 +129,10 @@ namespace ICSharpCode.Core
 		/// <summary>
 		/// Gets the keys that are in use by this properties container.
 		/// </summary>
-		public IReadOnlyList<string> Keys {
+		public ReadOnlyCollection<string> Keys {
 			get {
 				lock (syncRoot) {
-					return dict.Keys.ToArray();
+					return Array.AsReadOnly(dict.Keys.ToArray());
 				}
 			}
 		}
@@ -227,7 +228,7 @@ namespace ICSharpCode.Core
 		/// This method returns a copy of the list used internally; you need to call
 		/// <see cref="SetList"/> if you want to store the changed list.
 		/// </remarks>
-		public IReadOnlyList<T> GetList<T>(string key)
+		public ReadOnlyCollection<T> GetList<T>(string key)
 		{
 			lock (syncRoot) {
 				object val;
@@ -239,7 +240,7 @@ namespace ICSharpCode.Core
 							for (int i = 0; i < array.Length; i++) {
 								array[i] = (T)Deserialize(serializedArray[i], typeof(T));
 							}
-							return array;
+							return Array.AsReadOnly(array);
 						} catch (XamlObjectWriterException ex) {
 							LoggingService.Warn(ex);
 						} catch (NotSupportedException ex) {
@@ -249,7 +250,7 @@ namespace ICSharpCode.Core
 						LoggingService.Warn("Properties.GetList(" + key + ") - this entry is not a list");
 					}
 				}
-				return new T[0];
+				return Array.AsReadOnly(new T[0]);
 			}
 		}
 		
@@ -595,7 +596,7 @@ namespace ICSharpCode.Core
 			}
 		}
 		
-		IReadOnlyList<XElement> SaveContents()
+		List<XElement> SaveContents()
 		{
 			List<XElement> result = new List<XElement>();
 			foreach (var pair in dict) {

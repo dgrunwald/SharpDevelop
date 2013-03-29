@@ -17,8 +17,8 @@ namespace ICSharpCode.SharpDevelop.Dom
 	public class SimpleModelCollection<T> : IMutableModelCollection<T>
 	{
 		readonly List<T> list;
-		List<T> addedItems;
-		List<T> removedItems;
+		ListWithReadOnlySupport<T> addedItems;
+		ListWithReadOnlySupport<T> removedItems;
 		
 		public SimpleModelCollection()
 		{
@@ -87,7 +87,7 @@ namespace ICSharpCode.SharpDevelop.Dom
 		
 		public IReadOnlyCollection<T> CreateSnapshot()
 		{
-			return list.ToArray();
+			return list.ToListWithReadOnlySupport();
 		}
 		
 		public int Count {
@@ -127,7 +127,7 @@ namespace ICSharpCode.SharpDevelop.Dom
 			CheckReentrancy();
 			addedItems = null;
 			if (removedItems == null)
-				removedItems = new List<T>();
+				removedItems = new ListWithReadOnlySupport<T>();
 			removedItems.AddRange(list);
 			list.Clear();
 			RaiseEventIfNotInBatch();
@@ -140,7 +140,7 @@ namespace ICSharpCode.SharpDevelop.Dom
 			if (removedItems != null)
 				removedItems.Remove(item);
 			if (addedItems == null)
-				addedItems = new List<T>();
+				addedItems = new ListWithReadOnlySupport<T>();
 			addedItems.Add(item);
 			list.Add(item);
 			RaiseEventIfNotInBatch();
@@ -151,7 +151,7 @@ namespace ICSharpCode.SharpDevelop.Dom
 			if (items == null)
 				throw new ArgumentNullException("items");
 			CheckReentrancy();
-			List<T> itemsList = items.ToList();
+			ListWithReadOnlySupport<T> itemsList = items.ToListWithReadOnlySupport();
 			for (int i = 0; i < itemsList.Count; i++) {
 				ValidateItem(itemsList[i]);
 			}
@@ -175,7 +175,7 @@ namespace ICSharpCode.SharpDevelop.Dom
 				if (addedItems != null)
 					addedItems.Remove(item);
 				if (removedItems == null)
-					removedItems = new List<T>();
+					removedItems = new ListWithReadOnlySupport<T>();
 				removedItems.Add(item);
 				RaiseEventIfNotInBatch();
 				return true;
@@ -193,7 +193,7 @@ namespace ICSharpCode.SharpDevelop.Dom
 						if (addedItems != null)
 							addedItems.Remove(obj);
 						if (removedItems == null)
-							removedItems = new List<T>();
+							removedItems = new ListWithReadOnlySupport<T>();
 						removedItems.Add(obj);
 						return true;
 					} else {

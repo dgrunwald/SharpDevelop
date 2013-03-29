@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 
 namespace ICSharpCode.Core
@@ -14,10 +15,10 @@ namespace ICSharpCode.Core
 	{
 		object parameter;
 		Codon codon;
-		IReadOnlyCollection<ICondition> conditions;
+		ReadOnlyCollection<ICondition> conditions;
 		AddInTreeNode subItemNode;
 		
-		public BuildItemArgs(object parameter, Codon codon, IReadOnlyCollection<ICondition> conditions, AddInTreeNode subItemNode)
+		public BuildItemArgs(object parameter, Codon codon, ReadOnlyCollection<ICondition> conditions, AddInTreeNode subItemNode)
 		{
 			if (codon == null)
 				throw new ArgumentNullException("codon");
@@ -58,7 +59,7 @@ namespace ICSharpCode.Core
 		/// <summary>
 		/// The conditions applied to this item.
 		/// </summary>
-		public IReadOnlyCollection<ICondition> Conditions {
+		public ReadOnlyCollection<ICondition> Conditions {
 			get { return conditions; }
 		}
 		

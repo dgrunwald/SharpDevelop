@@ -200,7 +200,7 @@ namespace SearchAndReplace
 					offset = Selection.Offset;
 					length = Selection.Length;
 				}
-				List<SearchResultMatch> results = new List<SearchResultMatch>();
+				var results = new ListWithReadOnlySupport<SearchResultMatch>();
 				foreach (var result in strategy.FindAll(source, offset, length)) {
 					ThrowIfCancellationRequested();
 					if (document == null) {

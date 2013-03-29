@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -109,9 +110,9 @@ namespace ICSharpCode.SharpDevelop.Project
 		/// <summary>
 		/// Gets the list of file filters.
 		/// </summary>
-		public static IReadOnlyList<FileFilterDescriptor> GetFileFilters()
+		public static ReadOnlyCollection<FileFilterDescriptor> GetFileFilters()
 		{
-			return AddInTree.BuildItems<FileFilterDescriptor>("/SharpDevelop/Workbench/FileFilter", null);
+			return SD.AddInTree.BuildItems<FileFilterDescriptor>("/SharpDevelop/Workbench/FileFilter", null);
 		}
 		
 		/// <summary>

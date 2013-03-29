@@ -76,7 +76,7 @@ namespace ICSharpCode.Core.Tests.AddInTreeTests
 			formsDesignerAddIn.FileName = @"D:\SharpDevelop\AddIns\FormsDesigner\FormsDesigner.addin";
 			formsDesignerAddIn.Enabled = true;
 			
-			addInTree.Expect(a => a.AddIns).Return(new[] { formsDesignerAddIn });
+			addInTree.Expect(a => a.AddIns).Return(Array.AsReadOnly(new[] { formsDesignerAddIn }));
 			return addInTree;
 		}
 		
@@ -113,7 +113,7 @@ namespace ICSharpCode.Core.Tests.AddInTreeTests
 		public void ErrorMessageShownWhenAddInReferenceCannotBeFound()
 		{
 			IAddInTree addInTree = MockRepository.GenerateStrictMock<IAddInTree>();
-			addInTree.Expect(a => a.AddIns).Return(new AddIn[0]);
+			addInTree.Expect(a => a.AddIns).Return(Array.AsReadOnly(new AddIn[0]));
 			DerivedRuntime runtime = new DerivedRuntime(addInTree, "$UnknownAddIn/Unknown.dll", String.Empty);
 			runtime.Load();
 			

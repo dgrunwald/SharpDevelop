@@ -8,6 +8,7 @@ using System.Linq;
 using System.Windows.Media;
 
 using ICSharpCode.Core;
+using ICSharpCode.SharpDevelop;
 
 namespace ICSharpCode.AvalonEdit.AddIn
 {
@@ -33,7 +34,7 @@ namespace ICSharpCode.AvalonEdit.AddIn
 		
 		public static IReadOnlyList<CustomizedHighlightingColor> LoadColors()
 		{
-			return PropertyService.GetList<CustomizedHighlightingColor>("CustomizedHighlightingRules");
+			return PropertyService.GetList<CustomizedHighlightingColor>("CustomizedHighlightingRules").AsReadOnly();
 		}
 		
 		/// <summary>

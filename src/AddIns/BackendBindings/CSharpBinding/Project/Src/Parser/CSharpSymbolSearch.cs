@@ -63,7 +63,7 @@ namespace CSharpBinding
 			if (callback == null)
 				throw new ArgumentNullException("callback");
 			var cancellationToken = args.ProgressMonitor.CancellationToken;
-			return Task.Run(
+			return TaskEx.Run(
 				() => {
 					for (int i = 0; i < searchScopes.Count; i++) {
 						IFindReferenceSearchScope searchScope = searchScopes[i];
@@ -99,7 +99,7 @@ namespace CSharpBinding
 				return;
 			ReadOnlyDocument document = null;
 			IHighlighter highlighter = null;
-			List<Reference> results = new List<Reference>();
+			var results = new ListWithReadOnlySupport<Reference>();
 			
 			// Grab the unresolved file matching the compilation version
 			// (this may differ from the version created by re-parsing the project)

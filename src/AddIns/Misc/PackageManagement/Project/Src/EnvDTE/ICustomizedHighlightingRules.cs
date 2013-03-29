@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using ICSharpCode.AvalonEdit.AddIn;
+using ICSharpCode.SharpDevelop;
 
 namespace ICSharpCode.PackageManagement.EnvDTE
 {

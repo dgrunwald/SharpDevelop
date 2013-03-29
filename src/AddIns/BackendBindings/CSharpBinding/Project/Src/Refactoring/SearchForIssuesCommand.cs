@@ -104,7 +104,7 @@ namespace CSharpBinding.Refactoring
 		
 		Task SearchForIssuesAsync(List<FileName> fileNames, IEnumerable<IssueManager.IssueProvider> providers, Action<SearchedFile> callback, IProgressMonitor monitor)
 		{
-			return Task.Run(() => SearchForIssuesParallel(fileNames, providers, callback, monitor));
+			return TaskEx.Run(() => SearchForIssuesParallel(fileNames, providers, callback, monitor));
 		}
 		
 		void SearchForIssuesParallel(List<FileName> fileNames, IEnumerable<IssueManager.IssueProvider> providers, Action<SearchedFile> callback, IProgressMonitor monitor)
@@ -156,7 +156,7 @@ namespace CSharpBinding.Refactoring
 			var context = SDRefactoringContext.Create(fileName, fileContent, TextLocation.Empty, cancellationToken);
 			ReadOnlyDocument document = null;
 			IHighlighter highlighter = null;
-			var results = new List<SearchResultMatch>();
+			var results = new ListWithReadOnlySupport<SearchResultMatch>();
 			foreach (var provider in providers) {
 				cancellationToken.ThrowIfCancellationRequested();
 				foreach (var issue in provider.GetIssues(context)) {
@@ -180,7 +180,7 @@ namespace CSharpBinding.Refactoring
 		IReadOnlyList<SearchResultMatch> FindAndFixIssues(List<FileName> fileNames, List<IssueManager.IssueProvider> providers, IProgressMonitor progress, out int fixedIssueCount)
 		{
 			fixedIssueCount = 0;
-			List<SearchResultMatch> remainingIssues = new List<SearchResultMatch>();
+			var remainingIssues = new ListWithReadOnlySupport<SearchResultMatch>();
 			for (int i = 0; i < fileNames.Count; i++) {
 				remainingIssues.AddRange(FindAndFixIssues(fileNames[i], providers, progress.CancellationToken, ref fixedIssueCount));
 				progress.Report((double)i / fileNames.Count);

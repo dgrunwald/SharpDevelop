@@ -18,10 +18,10 @@ namespace ICSharpCode.SharpDevelop
 		/// </summary>
 		public bool Value {
 			get {
-				return Volatile.Read(ref val) != 0;
+				return Thread.VolatileRead(ref val) != 0;
 			}
 			set {
-				Volatile.Write(ref val, value ? 1 : 0);
+				Thread.VolatileWrite(ref val, value ? 1 : 0);
 			}
 		}
 		

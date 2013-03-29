@@ -103,7 +103,7 @@ namespace ICSharpCode.SharpDevelop.Gui
 			
 			async void DetectMonospaced()
 			{
-				this.IsMonospaced = await Task.Run(() => DetectMonospaced(this.FontFamily));
+				this.IsMonospaced = await TaskEx.Run(() => DetectMonospaced(this.FontFamily));
 			}
 
 			bool DetectMonospaced(FontFamily fontFamily)

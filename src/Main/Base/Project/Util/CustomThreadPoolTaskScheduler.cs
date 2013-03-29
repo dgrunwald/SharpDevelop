@@ -43,7 +43,7 @@ namespace ICSharpCode.SharpDevelop
 		
 		bool IncrementThreadCount()
 		{
-			int c = Volatile.Read(ref currentThreadCount);
+			int c = Thread.VolatileRead(ref currentThreadCount);
 			while (c < maxThreadCount) {
 				if (Interlocked.CompareExchange(ref currentThreadCount, c + 1, c) == c) {
 					return true;

@@ -53,12 +53,12 @@ namespace ICSharpCode.SharpDevelop.Tests.WebReferences
 			prop["id"] = "C#";
 			prop["supportedextensions"] = ".cs";
 			prop["projectfileextension"] = ".csproj";
-			Codon codon1 = new Codon(null, "ProjectBinding", prop, new Condition[0]);
+			Codon codon1 = new Codon(null, "ProjectBinding", prop, Array.AsReadOnly(new ICondition[0]));
 			prop = new Properties();
 			prop["id"] = "VBNet";
 			prop["supportedextensions"] = ".vb";
 			prop["projectfileextension"] = ".vbproj";
-			Codon codon2 = new Codon(null, "ProjectBinding", prop, new Condition[0]);
+			Codon codon2 = new Codon(null, "ProjectBinding", prop, Array.AsReadOnly(new ICondition[0]));
 			ProjectBindingService.SetBindings(new ProjectBindingDescriptor[] {
 			                                   	new ProjectBindingDescriptor(codon1),
 			                                   	new ProjectBindingDescriptor(codon2)

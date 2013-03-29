@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
 
 namespace ICSharpCode.SharpDevelop.Dom
 {
@@ -114,7 +113,7 @@ namespace ICSharpCode.SharpDevelop.Dom
 			
 			void OnSourceCollectionChanged(IReadOnlyCollection<TSource> removedItems, IReadOnlyCollection<TSource> addedItems)
 			{
-				List<TResult> removedResults = new List<TResult>();
+				var removedResults = new ListWithReadOnlySupport<TResult>();
 				foreach (TSource removedSource in removedItems) {
 					for (int i = 0; i < inputCollections.Count; i++) {
 						var inputCollection = inputCollections[i];
@@ -126,7 +125,7 @@ namespace ICSharpCode.SharpDevelop.Dom
 						}
 					}
 				}
-				List<TResult> addedResults = new List<TResult>();
+				var addedResults = new ListWithReadOnlySupport<TResult>();
 				foreach (TSource addedSource in addedItems) {
 					var inputCollection = new InputCollection(this, addedSource);
 					inputCollection.AddResultsToList(addedResults);
@@ -168,7 +167,7 @@ namespace ICSharpCode.SharpDevelop.Dom
 				
 				IReadOnlyCollection<TResult> GetResults(IReadOnlyCollection<TCollection> itemsCollection)
 				{
-					List<TResult> results = new List<TResult>(itemsCollection.Count);
+					var results = new ListWithReadOnlySupport<TResult>(itemsCollection.Count);
 					foreach (var item in itemsCollection) {
 						results.Add(parent.resultSelector(source, item));
 					}
@@ -183,7 +182,7 @@ namespace ICSharpCode.SharpDevelop.Dom
 			
 			IReadOnlyCollection<TResult> IModelCollection<TResult>.CreateSnapshot()
 			{
-				return this.ToList();
+				return this.ToListWithReadOnlySupport();
 			}
 			
 			public IEnumerator<TResult> GetEnumerator()

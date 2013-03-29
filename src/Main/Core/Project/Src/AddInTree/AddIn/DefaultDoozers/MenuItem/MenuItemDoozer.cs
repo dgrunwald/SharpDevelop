@@ -4,6 +4,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 
 namespace ICSharpCode.Core
@@ -78,9 +79,9 @@ namespace ICSharpCode.Core
 		public readonly object Parameter;
 		public readonly Codon Codon;
 		public readonly IList SubItems;
-		public readonly IReadOnlyCollection<ICondition> Conditions;
+		public readonly ReadOnlyCollection<ICondition> Conditions;
 		
-		public MenuItemDescriptor(object parameter, Codon codon, IList subItems, IReadOnlyCollection<ICondition> conditions)
+		public MenuItemDescriptor(object parameter, Codon codon, IList subItems, ReadOnlyCollection<ICondition> conditions)
 		{
 			if (codon == null)
 				throw new ArgumentNullException("codon");

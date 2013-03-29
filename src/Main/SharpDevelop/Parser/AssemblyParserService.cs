@@ -86,7 +86,7 @@ namespace ICSharpCode.SharpDevelop.Parser
 		
 		void CleanWeakDictionary()
 		{
-			Debug.Assert(Monitor.IsEntered(projectContentDictionary));
+			//Debug.Assert(Monitor.IsEntered(projectContentDictionary));
 			List<FileName> removed = new List<FileName>();
 			foreach (var pair in projectContentDictionary) {
 				//if (!pair.Value.IsAlive)
@@ -272,7 +272,7 @@ namespace ICSharpCode.SharpDevelop.Parser
 		Task SaveToCacheAsync(string cacheFileName, DateTime lastWriteTime, IUnresolvedAssembly pc)
 		{
 			if (cacheFileName == null)
-				return Task.FromResult<object>(null);
+				return TaskEx.FromResult<object>(null);
 			
 			// Call SaveToCache on a background task:
 			var shutdownService = SD.ShutdownService;

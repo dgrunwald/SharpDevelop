@@ -152,7 +152,7 @@ namespace ICSharpCode.SharpDevelop.BrowserDisplayBinding
 			}
 		}
 		
-		static IReadOnlyList<SchemeExtensionDescriptor> descriptors;
+		static IEnumerable<SchemeExtensionDescriptor> descriptors;
 		
 		public static ISchemeExtension GetScheme(string name)
 		{

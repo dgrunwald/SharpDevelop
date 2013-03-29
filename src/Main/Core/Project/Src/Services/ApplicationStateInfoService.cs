@@ -62,7 +62,7 @@ namespace ICSharpCode.Core
 		/// <returns>A dictionary with the titles and results of all registered state getters.</returns>
 		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1024:UsePropertiesWhereAppropriate")]
 		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes")]
-		public IReadOnlyDictionary<string, object> GetCurrentApplicationStateInfo()
+		public Dictionary<string, object> GetCurrentApplicationStateInfo()
 		{
 			Dictionary<string, object> state = new Dictionary<string, object>(stateGetters.Count, stateGetters.Comparer);
 			lock(stateGetters) {

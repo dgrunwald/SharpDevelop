@@ -5,6 +5,7 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Resources;
@@ -35,6 +36,7 @@ namespace ICSharpCode.Core
 	public class AddInTreeImpl : IAddInTree
 	{
 		List<AddIn>   addIns   = new List<AddIn>();
+		ReadOnlyCollection<AddIn> addInsReadOnly;
 		AddInTreeNode rootNode = new AddInTreeNode();
 		
 		ConcurrentDictionary<string, IDoozer> doozers = new ConcurrentDictionary<string, IDoozer>();
@@ -42,6 +44,7 @@ namespace ICSharpCode.Core
 		
 		public AddInTreeImpl(ApplicationStateInfoService applicationStateService)
 		{
+			addInsReadOnly = addIns.AsReadOnly();
 			doozers.TryAdd("Class", new ClassDoozer());
 			doozers.TryAdd("FileFilter", new FileFilterDoozer());
 			doozers.TryAdd("String", new StringDoozer());
@@ -89,9 +92,9 @@ namespace ICSharpCode.Core
 		/// <summary>
 		/// Gets the list of loaded AddIns.
 		/// </summary>
-		public IReadOnlyList<AddIn> AddIns {
+		public ReadOnlyCollection<AddIn> AddIns {
 			get {
-				return addIns;
+				return addInsReadOnly;
 			}
 		}
 		
@@ -169,13 +172,13 @@ namespace ICSharpCode.Core
 		/// <param name="throwOnNotFound">If true, throws a <see cref="TreePathNotFoundException"/>
 		/// if the path is not found. If false, an empty ArrayList is returned when the
 		/// path is not found.</param>
-		public IReadOnlyList<T> BuildItems<T>(string path, object parameter, bool throwOnNotFound = true)
+		public ReadOnlyCollection<T> BuildItems<T>(string path, object parameter, bool throwOnNotFound = true)
 		{
 			AddInTreeNode node = GetTreeNode(path, throwOnNotFound);
 			if (node == null)
-				return new List<T>();
+				return new List<T>().AsReadOnly();
 			else
-				return node.BuildChildItems<T>(parameter);
+				return node.BuildChildItems<T>(parameter).AsReadOnly();
 		}
 		
 		AddInTreeNode CreatePath(AddInTreeNode localRoot, string path)

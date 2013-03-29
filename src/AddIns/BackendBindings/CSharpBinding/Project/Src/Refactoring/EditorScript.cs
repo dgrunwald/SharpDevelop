@@ -73,7 +73,7 @@ namespace CSharpBinding.Refactoring
 			editor.Select(startOffset, endOffset - startOffset);
 		}
 		
-		static readonly Task completedTask = Task.FromResult<object>(null);
+		static readonly Task completedTask = TaskEx.FromResult<object>(null);
 		
 		public override Task Link(params AstNode[] nodes)
 		{

@@ -82,7 +82,7 @@ namespace ICSharpCode.Core
 						} else if (elementName == "ComplexCondition") {
 							conditionStack.Push(Condition.ReadComplexCondition(reader));
 						} else {
-							Codon newCodon = new Codon(this.AddIn, elementName, Properties.ReadFromAttributes(reader), conditionStack.ToArray());
+							Codon newCodon = new Codon(this.AddIn, elementName, Properties.ReadFromAttributes(reader), Array.AsReadOnly(conditionStack.ToArray()));
 							innerCodons.Add(newCodon);
 							if (!reader.IsEmptyElement) {
 								ExtensionPath subPath = this.AddIn.GetExtensionPath(this.Name + "/" + newCodon.Id);

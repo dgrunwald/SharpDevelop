@@ -96,13 +96,13 @@ namespace ICSharpCode.Core
 			AddInTreeNode subItemNode;
 			childNodes.TryGetValue(codon.Id, out subItemNode);
 			
-			IReadOnlyCollection<ICondition> conditions;
+			ReadOnlyCollection<ICondition> conditions;
 			if (additionalConditions == null)
 				conditions = codon.Conditions;
 			else if (codon.Conditions == null)
-				conditions = additionalConditions.ToList();
+				conditions = additionalConditions.ToList().AsReadOnly();
 			else
-				conditions = additionalConditions.Concat(codon.Conditions).ToList();
+				conditions = additionalConditions.Concat(codon.Conditions).ToList().AsReadOnly();
 			
 			return codon.BuildItem(new BuildItemArgs(parameter, codon, conditions, subItemNode));
 		}

@@ -128,7 +128,7 @@ namespace ICSharpCode.SharpDevelop.Project
 			
 			public Task<bool> BuildAsync(ProjectBuildOptions options, IBuildFeedbackSink feedbackSink, IProgressMonitor progressMonitor)
 			{
-				return Task.FromResult(true);
+				return TaskEx.FromResult(true);
 			}
 		}
 		

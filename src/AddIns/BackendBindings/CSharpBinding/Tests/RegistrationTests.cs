@@ -9,6 +9,7 @@ using CSharpBinding.Refactoring;
 using ICSharpCode.Core;
 using ICSharpCode.NRefactory.CSharp;
 using ICSharpCode.NRefactory.CSharp.Refactoring;
+using ICSharpCode.SharpDevelop;
 using NUnit.Framework;
 using Rhino.Mocks;
 
@@ -47,11 +48,11 @@ namespace CSharpBinding.Tests
 			
 			registeredIssueProviders = addIn.Paths["/SharpDevelop/ViewContent/TextEditor/C#/IssueProviders"].Codons
 				.Select(c => FindType(c.Properties["class"])).ToList();
-			NRissueProviders = NRCSharp.ExportedTypes.Where(t => t.GetCustomAttribute<IssueDescriptionAttribute>() != null).ToList();
+			NRissueProviders = NRCSharp.GetExportedTypes().Where(t => t.GetCustomAttribute<IssueDescriptionAttribute>() != null).ToList();
 			
 			registeredContextActions = addIn.Paths["/SharpDevelop/ViewContent/TextEditor/C#/ContextActions"].Codons
 				.Select(c => FindType(c.Properties["class"])).ToList();
-			NRcontextActions = NRCSharp.ExportedTypes.Where(t => t.GetCustomAttribute<ContextActionAttribute>() != null).ToList();
+			NRcontextActions = NRCSharp.GetExportedTypes().Where(t => t.GetCustomAttribute<ContextActionAttribute>() != null).ToList();
 		}
 		
 		[Test]

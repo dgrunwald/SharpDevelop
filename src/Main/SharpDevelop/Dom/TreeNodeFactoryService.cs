@@ -14,7 +14,7 @@ namespace ICSharpCode.SharpDevelop.Dom
 		
 		public TreeNodeFactoryService()
 		{
-			factories = SD.AddInTree.BuildItems<ITreeNodeFactory>("/SharpDevelop/TreeNodeFactories", this, false);
+			factories = SD.AddInTree.BuildItems<ITreeNodeFactory>("/SharpDevelop/TreeNodeFactories", this, false).AsReadOnly();
 		}
 		
 		public TreeNodeFactoryService(IReadOnlyList<ITreeNodeFactory> factories)

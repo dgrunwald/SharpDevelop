@@ -97,7 +97,7 @@ namespace ICSharpCode.SharpDevelop.Refactoring
 		{
 			lock (syncRoot) {
 				if (compilation == null)
-					compilation = Task.FromResult(SD.ParserService.GetCompilationForFile(this.FileName));
+					compilation = TaskEx.FromResult(SD.ParserService.GetCompilationForFile(this.FileName));
 				return compilation;
 			}
 		}
@@ -150,7 +150,7 @@ namespace ICSharpCode.SharpDevelop.Refactoring
 			if (parseInfo == null)
 				return null;
 			var compilation = await GetCompilationAsync().ConfigureAwait(false);
-			return await Task.Run(() => SD.ParserService.ResolveAsync(this.FileName, caretLocation, this.TextSource, compilation)).ConfigureAwait(false);
+			return await TaskEx.Run(() => SD.ParserService.ResolveAsync(this.FileName, caretLocation, this.TextSource, compilation)).ConfigureAwait(false);
 		}
 		
 		/// <summary>
@@ -158,7 +158,7 @@ namespace ICSharpCode.SharpDevelop.Refactoring
 		/// </summary>
 		public Task<T> GetCachedAsync<T>(Func<EditorRefactoringContext, T> initializationFunc)
 		{
-			return (Task<T>)cachedValues.GetOrAdd(typeof(T), _ => Task.FromResult(initializationFunc(this)));
+			return (Task<T>)cachedValues.GetOrAdd(typeof(T), _ => TaskEx.FromResult(initializationFunc(this)));
 		}
 		
 		/// <summary>

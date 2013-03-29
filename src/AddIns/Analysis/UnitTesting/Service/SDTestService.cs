@@ -16,7 +16,7 @@ namespace ICSharpCode.UnitTesting
 	{
 		#region Test Framework Management
 		const string AddInPath = "/SharpDevelop/UnitTesting/TestFrameworks";
-		IReadOnlyList<TestFrameworkDescriptor> testFrameworkDescriptors = SD.AddInTree.BuildItems<TestFrameworkDescriptor>(AddInPath, null);
+		IEnumerable<TestFrameworkDescriptor> testFrameworkDescriptors = SD.AddInTree.BuildItems<TestFrameworkDescriptor>(AddInPath, null);
 		
 		public ITestFramework GetTestFrameworkForProject(IProject project)
 		{

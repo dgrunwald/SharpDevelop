@@ -4,6 +4,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 
 namespace ICSharpCode.Core
@@ -47,7 +48,7 @@ namespace ICSharpCode.Core
 		void Set<T>(string key, T value);
 		
 		/// <inheritdoc cref="Properties.GetList"/>
-		IReadOnlyList<T> GetList<T>(string key);
+		ReadOnlyCollection<T> GetList<T>(string key);
 		
 		/// <inheritdoc cref="Properties.SetList"/>
 		void SetList<T>(string key, IEnumerable<T> value);

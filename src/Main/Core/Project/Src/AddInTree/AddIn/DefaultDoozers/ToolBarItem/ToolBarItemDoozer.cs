@@ -4,6 +4,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace ICSharpCode.Core
 {
@@ -67,9 +68,9 @@ namespace ICSharpCode.Core
 		public readonly object Parameter;
 		public readonly Codon Codon;
 		public readonly IList SubItems;
-		public readonly IReadOnlyCollection<ICondition> Conditions;
+		public readonly ReadOnlyCollection<ICondition> Conditions;
 		
-		public ToolbarItemDescriptor(object parameter, Codon codon, IList subItems, IReadOnlyCollection<ICondition> conditions)
+		public ToolbarItemDescriptor(object parameter, Codon codon, IList subItems, ReadOnlyCollection<ICondition> conditions)
 		{
 			this.Parameter = parameter;
 			this.Codon = codon;

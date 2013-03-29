@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -18,7 +19,7 @@ namespace ICSharpCode.Core.Presentation
 		BindingExpressionBase isCheckedBinding;
 		readonly IEnumerable<ICondition> conditions;
 		
-		public ToolBarCheckBox(Codon codon, object caller, IReadOnlyCollection<ICondition> conditions)
+		public ToolBarCheckBox(Codon codon, object caller, ReadOnlyCollection<ICondition> conditions)
 		{
 			ToolTipService.SetShowOnDisabled(this, true);
 			

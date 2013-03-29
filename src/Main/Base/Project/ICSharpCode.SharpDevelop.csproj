@@ -25,7 +25,7 @@
     <NoWarn>0809 1591</NoWarn>
     <WarningLevel>4</WarningLevel>
     <OutputPath>..\..\..\..\bin\</OutputPath>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile>
     </TargetFrameworkProfile>
     <RootNamespace>ICSharpCode.SharpDevelop</RootNamespace>
@@ -46,6 +46,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.Build.Framework" />
+    <Reference Include="Microsoft.CompilerServices.AsyncTargetingPack.Net4">
+      <HintPath>..\..\..\..\packages\Microsoft.CompilerServices.AsyncTargetingPack.1.0.0\lib\net40\Microsoft.CompilerServices.AsyncTargetingPack.Net4.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="PresentationCore">
       <RequiredTargetFramework>3.0</RequiredTargetFramework>
@@ -244,6 +247,7 @@
     <Compile Include="Util\EnumBinding.cs" />
     <Compile Include="Util\EventAdapter.cs" />
     <Compile Include="Util\FakeMessageLoop.cs" />
+    <Compile Include="Util\Gate.cs" />
     <Compile Include="Util\PropertyChangedEventArgs.cs" />
     <Compile Include="Util\SharpDevelopExtensions.cs" />
     <Compile Include="Util\GenericConverter.cs" />
@@ -265,6 +269,7 @@
     <Compile Include="Util\SimpleTaskScheduler.cs" />
     <Compile Include="Util\TreeNode.cs" />
     <Compile Include="Util\UnclosableStream.cs" />
+    <Compile Include="Util\WeakReference.cs" />
     <Compile Include="WinForms\IClipboardHandler.cs" />
     <Compile Include="WinForms\IContextHelpProvider.cs" />
     <Compile Include="WinForms\IPrintable.cs" />
@@ -799,6 +804,7 @@
     <EmbeddedResource Include="Src\Gui\Dialogs\NewProjectDialog.resx">
       <DependentUpon>NewProjectDialog.cs</DependentUpon>
     </EmbeddedResource>
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Designer" />

@@ -23,7 +23,7 @@ namespace ICSharpCode.SharpDevelop.Dom
 		
 		public IReadOnlyCollection<ITypeDefinitionModel> CreateSnapshot()
 		{
-			return list.ToArray();
+			return list.ToListWithReadOnlySupport();
 		}
 		
 		public IEnumerator<ITypeDefinitionModel> GetEnumerator()
@@ -51,8 +51,8 @@ namespace ICSharpCode.SharpDevelop.Dom
 		
 		public void Update(IList<IUnresolvedTypeDefinition> oldTypes, IList<IUnresolvedTypeDefinition> newTypes)
 		{
-			List<ITypeDefinitionModel> oldModels = null;
-			List<ITypeDefinitionModel> newModels = null;
+			ListWithReadOnlySupport<ITypeDefinitionModel> oldModels = null;
+			ListWithReadOnlySupport<ITypeDefinitionModel> newModels = null;
 			bool[] oldTypeDefHandled = null;
 			if (oldTypes != null) {
 				oldTypeDefHandled = new bool[oldTypes.Count];
@@ -81,7 +81,7 @@ namespace ICSharpCode.SharpDevelop.Dom
 						model = new TypeDefinitionModel(context, newPart);
 						list.Add(model);
 						if (newModels == null)
-							newModels = new List<ITypeDefinitionModel>();
+							newModels = new ListWithReadOnlySupport<ITypeDefinitionModel>();
 						newModels.Add(model);
 					}
 				}
@@ -99,7 +99,7 @@ namespace ICSharpCode.SharpDevelop.Dom
 							} else {
 								list.Remove(model);
 								if (oldModels == null)
-									oldModels = new List<ITypeDefinitionModel>();
+									oldModels = new ListWithReadOnlySupport<ITypeDefinitionModel>();
 								oldModels.Add(model);
 							}
 						}

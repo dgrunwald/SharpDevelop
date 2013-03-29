@@ -43,8 +43,8 @@ namespace XmlEditor.Tests.Editor
 				
 				addinTreeNode.AddCodons(
 					new Codon[] {
-						new Codon(addin, "SchemaAssociation", properties1, new ICondition[0]),
-						new Codon(addin, "SchemaAssociation", properties2, new ICondition[0])
+						new Codon(addin, "SchemaAssociation", properties1, Array.AsReadOnly(new ICondition[0])),
+						new Codon(addin, "SchemaAssociation", properties2, Array.AsReadOnly(new ICondition[0]))
 					});
 				
 				schemaAssociations = new DefaultXmlSchemaFileAssociations(addinTreeNode);

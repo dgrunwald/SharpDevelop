@@ -100,7 +100,7 @@ namespace ICSharpCode.SharpDevelop.Parser
 		static Task SerializeAsync(string cacheFileName, IProjectContent pc)
 		{
 			if (cacheFileName == null)
-				return Task.FromResult<object>(null);
+				return TaskEx.FromResult<object>(null);
 			Task task = IOTaskScheduler.Factory.StartNew(
 				delegate {
 					pc = pc.RemoveAssemblyReferences(pc.AssemblyReferences);
@@ -290,7 +290,7 @@ namespace ICSharpCode.SharpDevelop.Parser
 			using (IProgressMonitor initReferencesProgressMonitor = progressMonitor.CreateSubTask(LoadingReferencesWorkAmount * scalingFactor),
 			       parseProgressMonitor = progressMonitor.CreateSubTask(projectItems.Count * scalingFactor))
 			{
-				var resolveReferencesTask = Task.Run(
+				var resolveReferencesTask = TaskEx.Run(
 					delegate {
 						DoResolveReferences(initReferencesProgressMonitor);
 					}, initReferencesProgressMonitor.CancellationToken);

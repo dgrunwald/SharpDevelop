@@ -53,7 +53,7 @@ namespace ICSharpCode.XamlBinding
 			if (callback == null)
 				throw new ArgumentNullException("callback");
 			var cancellationToken = searchArguments.ProgressMonitor.CancellationToken;
-			return Task.Run(
+			return TaskEx.Run(
 				() => {
 					object progressLock = new object();
 					Parallel.ForEach(
@@ -85,7 +85,7 @@ namespace ICSharpCode.XamlBinding
 				return;
 			ReadOnlyDocument document = null;
 			IHighlighter highlighter = null;
-			List<Reference> results = new List<Reference>();
+			var results = new ListWithReadOnlySupport<Reference>();
 			XamlResolver resolver = new XamlResolver();
 			do {
 				if (document == null) {

@@ -348,7 +348,7 @@ namespace ICSharpCode.SharpDevelop.Project
 		/// <summary>
 		/// Converts the 'NestedProjects' section into a dictionary from project GUID to parent solution folder.
 		/// </summary>
-		Dictionary<Guid, SolutionFolder> LoadNesting(SolutionSection section, IReadOnlyDictionary<Guid, SolutionFolder> solutionFolderDict)
+		Dictionary<Guid, SolutionFolder> LoadNesting(SolutionSection section, Dictionary<Guid, SolutionFolder> solutionFolderDict)
 		{
 			var result = new Dictionary<Guid, SolutionFolder>();
 			foreach (var entry in section) {

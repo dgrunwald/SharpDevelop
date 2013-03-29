@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -27,13 +28,13 @@ namespace ICSharpCode.Core.WinForms
 			}
 		}
 		
-		public MenuCommand(Codon codon, object caller, IReadOnlyCollection<ICondition> conditions)
+		public MenuCommand(Codon codon, object caller, ReadOnlyCollection<ICondition> conditions)
 			: this(codon, caller, false, conditions)
 		{
 			
 		}
 		
-		public MenuCommand(Codon codon, object caller, bool createCommand, IReadOnlyCollection<ICondition> conditions)
+		public MenuCommand(Codon codon, object caller, bool createCommand, ReadOnlyCollection<ICondition> conditions)
 		{
 			this.RightToLeft = RightToLeft.Inherit;
 			this.caller        = caller;

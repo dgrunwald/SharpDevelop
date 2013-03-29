@@ -60,7 +60,7 @@ namespace ICSharpCode.SettingsEditor
 		
 		public SettingsView()
 		{
-			
+			throw new NotImplementedException("missing AddingNewItem='Datagrid_AddingNewItem' event");
 			InitializeComponent();
 			ambience = AmbienceService.GetCurrentAmbience();
 			compilation = MinimalCorlib.Instance.CreateCompilation();
@@ -186,13 +186,14 @@ namespace ICSharpCode.SettingsEditor
 		}
 		
 		
+		/*
 		void Datagrid_AddingNewItem(object sender, AddingNewItemEventArgs e)
 		{
 			var settings = new SettingsEntry(this);
 			settings.Type = typeof(string);
 			var vm = new SettingsVM(settings);
 			e.NewItem = vm;
-		}
+		}*/
 	}
 	
 	

@@ -82,7 +82,7 @@ namespace ICSharpCode.SharpDevelop.Project
 			get {
 				if (projectFile == null)
 					throw new ObjectDisposedException("MSBuildBasedProject");
-				Debug.Assert(Monitor.IsEntered(SyncRoot));
+				//Debug.Assert(Monitor.IsEntered(SyncRoot));
 				return projectFile;
 			}
 		}
@@ -96,7 +96,7 @@ namespace ICSharpCode.SharpDevelop.Project
 			get {
 				if (projectFile == null)
 					throw new ObjectDisposedException("MSBuildBasedProject");
-				Debug.Assert(Monitor.IsEntered(SyncRoot));
+				//Debug.Assert(Monitor.IsEntered(SyncRoot));
 				return userProjectFile;
 			}
 		}
@@ -935,7 +935,7 @@ namespace ICSharpCode.SharpDevelop.Project
 				IReadOnlyCollection<ProjectItem> c = project.itemsReadOnly;
 				if (c == null) {
 					lock (project.SyncRoot) {
-						project.itemsReadOnly = c = project.items.ToArray();
+						project.itemsReadOnly = c = project.items.ToListWithReadOnlySupport();
 					}
 				}
 				return c;
@@ -953,7 +953,7 @@ namespace ICSharpCode.SharpDevelop.Project
 			
 			void IMutableModelCollection<ProjectItem>.AddRange(IEnumerable<ProjectItem> items)
 			{
-				var newItems = items.ToList();
+				var newItems = items.ToListWithReadOnlySupport();
 				lock (project.SyncRoot) {
 					foreach (var item in newItems)
 						project.AddProjectItem(item);
@@ -963,7 +963,7 @@ namespace ICSharpCode.SharpDevelop.Project
 			
 			int IMutableModelCollection<ProjectItem>.RemoveAll(Predicate<ProjectItem> predicate)
 			{
-				List<ProjectItem> removed = new List<ProjectItem>();
+				var removed = new ListWithReadOnlySupport<ProjectItem>();
 				foreach (var item in CreateSnapshot()) {
 					if (predicate(item)) {
 						if (project.RemoveProjectItem(item))
@@ -992,7 +992,7 @@ namespace ICSharpCode.SharpDevelop.Project
 			void ICollection<ProjectItem>.Add(ProjectItem item)
 			{
 				project.AddProjectItem(item);
-				CollectionChanged(EmptyList<ProjectItem>.Instance, new[] { item });
+				CollectionChanged(EmptyList<ProjectItem>.Instance, new[] { item }.AsReadOnly());
 			}
 			
 			void ICollection<ProjectItem>.Clear()
@@ -1014,7 +1014,7 @@ namespace ICSharpCode.SharpDevelop.Project
 			bool ICollection<ProjectItem>.Remove(ProjectItem item)
 			{
 				if (project.RemoveProjectItem(item)) {
-					CollectionChanged(new[] { item }, EmptyList<ProjectItem>.Instance);
+					CollectionChanged(new[] { item }.AsReadOnly(), EmptyList<ProjectItem>.Instance);
 					return true;
 				}
 				return false;
@@ -1058,7 +1058,7 @@ namespace ICSharpCode.SharpDevelop.Project
 				foreach (var item in c.Project.GetItems("AvailableItemName")) {
 					availableFileItemTypes.Add(new ItemType(item.EvaluatedInclude));
 				}
-				this.availableFileItemTypes = availableFileItemTypes.Distinct().OrderBy(i => i.ItemName).ToArray();
+				this.availableFileItemTypes = availableFileItemTypes.Distinct().OrderBy(i => i.ItemName).ToListWithReadOnlySupport();
 				
 				foreach (var item in c.Project.AllEvaluatedItems) {
 					if (item.IsImported) continue;
@@ -1353,8 +1353,8 @@ namespace ICSharpCode.SharpDevelop.Project
 				var oldPlatformNames = this.platformNames.CreateSnapshot();
 				this.configurationNames.SetContents(configurationNames);
 				this.platformNames.SetContents(platformNames);
-				this.configurationNames.OnCollectionChanged(oldConfigurationNames, configurationNames.ToArray());
-				this.platformNames.OnCollectionChanged(oldPlatformNames, platformNames.ToArray());
+				this.configurationNames.OnCollectionChanged(oldConfigurationNames, configurationNames.ToListWithReadOnlySupport());
+				this.platformNames.OnCollectionChanged(oldPlatformNames, platformNames.ToListWithReadOnlySupport());
 			}
 		}
 

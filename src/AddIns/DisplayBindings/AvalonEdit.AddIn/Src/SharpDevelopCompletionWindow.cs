@@ -39,7 +39,7 @@ namespace ICSharpCode.AvalonEdit.AddIn
 			set {
 				// Disable virtualization if we use automatic width - this prevents the window from resizing
 				// when the user scrolls.
-				VirtualizingPanel.SetIsVirtualizing(this.CompletionList.ListBox, !double.IsNaN(value));
+				VirtualizingStackPanel.SetIsVirtualizing(this.CompletionList.ListBox, !double.IsNaN(value));
 				this.Width = value;
 				if (double.IsNaN(value)) {
 					// enable size-to-width:

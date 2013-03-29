@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
@@ -17,7 +18,7 @@ namespace ICSharpCode.Core.Presentation
 	{
 		readonly string ActivationMethod;
 		
-		public MenuCommand(UIElement inputBindingOwner, Codon codon, object caller, bool createCommand, string activationMethod, IReadOnlyCollection<ICondition> conditions) : base(codon, caller, conditions)
+		public MenuCommand(UIElement inputBindingOwner, Codon codon, object caller, bool createCommand, string activationMethod, ReadOnlyCollection<ICondition> conditions) : base(codon, caller, conditions)
 		{
 			this.ActivationMethod = activationMethod;
 			if (createCommand)

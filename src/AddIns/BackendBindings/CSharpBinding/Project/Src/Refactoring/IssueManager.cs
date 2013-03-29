@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -28,7 +29,7 @@ namespace CSharpBinding.Refactoring
 	{
 		static readonly Lazy<IReadOnlyList<IssueProvider>> issueProviders = new Lazy<IReadOnlyList<IssueProvider>>(
 			() => AddInTree.BuildItems<ICodeIssueProvider>("/SharpDevelop/ViewContent/TextEditor/C#/IssueProviders", null, false)
-			.Select(p => new IssueProvider(p)).ToList());
+			.Select(p => new IssueProvider(p)).ToListWithReadOnlySupport());
 		
 		internal static IReadOnlyList<IssueProvider> IssueProviders {
 			get { return issueProviders.Value; }
@@ -127,7 +128,7 @@ namespace CSharpBinding.Refactoring
 				this.EndOffset = endOffset;
 				this.Severity = provider.CurrentSeverity;
 				
-				this.Actions = actions.Select(Wrap).ToList();
+				this.Actions = actions.Select(Wrap).ToListWithReadOnlySupport();
 			}
 			
 			IContextAction Wrap(CodeAction actionToWrap, int index)
@@ -246,7 +247,7 @@ namespace CSharpBinding.Refactoring
 			var cancellationToken = cancellationTokenSource.Token;
 			List<InspectionTag> results = new List<InspectionTag>();
 			try {
-				await Task.Run(
+				await TaskEx.Run(
 					delegate {
 						var compilation = SD.ParserService.GetCompilationForFile(parseInfo.FileName);
 						var resolver = parseInfo.GetResolver(compilation);
@@ -321,7 +322,7 @@ namespace CSharpBinding.Refactoring
 					result.AddRange(tag.Actions);
 				}
 			}
-			return Task.FromResult(result.ToArray());
+			return TaskEx.FromResult(result.ToArray());
 		}
 		#endregion
 	}

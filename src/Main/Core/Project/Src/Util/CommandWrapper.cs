@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection;
 using System.Windows.Input;
@@ -27,7 +28,7 @@ namespace ICSharpCode.Core
 		/// <summary>
 		/// Creates a lazy command.
 		/// </summary>
-		public static ICommand CreateLazyCommand(Codon codon, IReadOnlyCollection<ICondition> conditions)
+		public static ICommand CreateLazyCommand(Codon codon, ReadOnlyCollection<ICondition> conditions)
 		{
 			return new CommandWrapper(codon, conditions);
 		}
@@ -35,7 +36,7 @@ namespace ICSharpCode.Core
 		/// <summary>
 		/// Creates a non-lazy command.
 		/// </summary>
-		public static ICommand CreateCommand(Codon codon, IReadOnlyCollection<ICondition> conditions)
+		public static ICommand CreateCommand(Codon codon, ReadOnlyCollection<ICondition> conditions)
 		{
 			ICommand command = CreateCommand(codon);
 			if (command != null && conditions.Count == 0)
@@ -100,10 +101,10 @@ namespace ICSharpCode.Core
 		
 		bool commandCreated;
 		ICommand addInCommand;
-		readonly IReadOnlyCollection<ICondition> conditions;
+		readonly ReadOnlyCollection<ICondition> conditions;
 		readonly Codon codon;
 		
-		private CommandWrapper(Codon codon, IReadOnlyCollection<ICondition> conditions)
+		private CommandWrapper(Codon codon, ReadOnlyCollection<ICondition> conditions)
 		{
 			if (conditions == null)
 				throw new ArgumentNullException("conditions");
@@ -112,7 +113,7 @@ namespace ICSharpCode.Core
 			this.canExecuteChangedHandlersToRegisterOnCommand = new WeakCollection<EventHandler>();
 		}
 		
-		private CommandWrapper(ICommand command, IReadOnlyCollection<ICondition> conditions)
+		private CommandWrapper(ICommand command, ReadOnlyCollection<ICondition> conditions)
 		{
 			if (conditions == null)
 				throw new ArgumentNullException("conditions");

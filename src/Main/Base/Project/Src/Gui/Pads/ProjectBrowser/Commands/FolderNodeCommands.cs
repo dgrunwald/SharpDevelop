@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.IO;
 using System.Windows.Forms;
@@ -41,7 +42,7 @@ namespace ICSharpCode.SharpDevelop.Project.Commands
 			}
 		}
 		
-		int GetFileFilterIndex(IProject project, IReadOnlyList<FileFilterDescriptor> fileFilters)
+		int GetFileFilterIndex(IProject project, ReadOnlyCollection<FileFilterDescriptor> fileFilters)
 		{
 			if (project != null) {
 				ProjectBindingDescriptor projectCodon = ProjectBindingService.GetCodonPerLanguageName(project.Language);

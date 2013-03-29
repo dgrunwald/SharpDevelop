@@ -4,6 +4,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -17,7 +18,7 @@ namespace ICSharpCode.Core.Presentation
 	{
 		protected readonly Codon codon;
 		protected readonly object caller;
-		protected readonly IReadOnlyCollection<ICondition> conditions;
+		protected readonly ReadOnlyCollection<ICondition> conditions;
 		
 		/// <summary>
 		/// If true, UpdateStatus() sets the enabled flag.
@@ -25,7 +26,7 @@ namespace ICSharpCode.Core.Presentation
 		/// </summary>
 		internal bool SetEnabled;
 		
-		public CoreMenuItem(Codon codon, object caller, IReadOnlyCollection<ICondition> conditions)
+		public CoreMenuItem(Codon codon, object caller, ReadOnlyCollection<ICondition> conditions)
 		{
 			this.codon = codon;
 			this.caller = caller;

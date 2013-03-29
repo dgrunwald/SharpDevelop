@@ -91,7 +91,7 @@ namespace CSharpBinding.Refactoring
 				// grab SelectionStart/SelectionLength while we're still on the main thread
 				int selectionStart = editor.SelectionStart;
 				int selectionLength = editor.SelectionLength;
-				return Task.Run(
+				return TaskEx.Run(
 					async delegate {
 						if (!CreateCodeActionProvider())
 							return new IContextAction[0];

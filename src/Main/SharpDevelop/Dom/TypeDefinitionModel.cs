@@ -21,7 +21,7 @@ namespace ICSharpCode.SharpDevelop.Dom
 	{
 		readonly IEntityModelContext context;
 		readonly FullTypeName fullTypeName;
-		List<IUnresolvedTypeDefinition> parts = new List<IUnresolvedTypeDefinition>();
+		ListWithReadOnlySupport<IUnresolvedTypeDefinition> parts = new ListWithReadOnlySupport<IUnresolvedTypeDefinition>();
 		
 		public TypeDefinitionModel(IEntityModelContext context, IUnresolvedTypeDefinition firstPart)
 		{
@@ -84,7 +84,7 @@ namespace ICSharpCode.SharpDevelop.Dom
 		sealed class MemberCollection : IModelCollection<MemberModel>
 		{
 			readonly TypeDefinitionModel parent;
-			List<List<MemberModel>> lists = new List<List<MemberModel>>();
+			List<ListWithReadOnlySupport<MemberModel>> lists = new List<ListWithReadOnlySupport<MemberModel>>();
 			
 			public MemberCollection(TypeDefinitionModel parent)
 			{
@@ -93,7 +93,7 @@ namespace ICSharpCode.SharpDevelop.Dom
 			
 			public void InsertPart(int partIndex, IUnresolvedTypeDefinition newPart)
 			{
-				List<MemberModel> newItems = new List<MemberModel>(newPart.Members.Count);
+				var newItems = new ListWithReadOnlySupport<MemberModel>(newPart.Members.Count);
 				foreach (var newMember in newPart.Members) {
 					newItems.Add(new MemberModel(parent.context, newMember) { strongParentCollectionReference = this });
 				}
@@ -136,7 +136,7 @@ namespace ICSharpCode.SharpDevelop.Dom
 				// We might try to be clever here and find a LCS so that we only update the members that were actually changed,
 				// or we might consider moving members around (INotifyCollectionChanged supports moves)
 				// However, the easiest solution by far is to just remove + readd the whole middle portion.
-				var oldItems = collectionChanged != null ? list.GetRange(startPos, endPosOld - startPos) : null;
+				var oldItems = collectionChanged != null ? new ReadOnlyCollectionWrapper<MemberModel>(list.GetRange(startPos, endPosOld - startPos)) : null;
 				list.RemoveRange(startPos, endPosOld - startPos);
 				var newItems = new MemberModel[endPosNew - startPos];
 				for (int i = 0; i < newItems.Length; i++) {
@@ -145,7 +145,7 @@ namespace ICSharpCode.SharpDevelop.Dom
 				}
 				list.InsertRange(startPos, newItems);
 				if (collectionChanged != null && (oldItems.Count > 0 || newItems.Length > 0)) {
-					collectionChanged(oldItems, newItems);
+					collectionChanged(oldItems, newItems.AsReadOnly());
 				}
 			}
 			
@@ -185,7 +185,7 @@ namespace ICSharpCode.SharpDevelop.Dom
 			
 			public IReadOnlyCollection<MemberModel> CreateSnapshot()
 			{
-				return this.ToArray();
+				return this.ToListWithReadOnlySupport();
 			}
 			
 			public IEnumerator<MemberModel> GetEnumerator()

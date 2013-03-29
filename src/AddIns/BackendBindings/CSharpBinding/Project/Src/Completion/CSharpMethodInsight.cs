@@ -31,7 +31,7 @@ namespace CSharpBinding.Completion
 			this.binding = binding;
 			this.editor = editor;
 			this.startOffset = startOffset;
-			this.items = items.ToList();
+			this.items = items.ToListWithReadOnlySupport();
 		}
 		
 		public void Show()

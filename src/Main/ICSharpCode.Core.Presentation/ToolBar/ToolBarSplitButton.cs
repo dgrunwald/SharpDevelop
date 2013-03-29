@@ -4,6 +4,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -17,9 +18,9 @@ namespace ICSharpCode.Core.Presentation
 	{
 		object caller;
 		Codon codon;
-		IReadOnlyCollection<ICondition> conditions;
+		ReadOnlyCollection<ICondition> conditions;
 		
-		public ToolBarSplitButton(Codon codon, object caller, IList submenu, IReadOnlyCollection<ICondition> conditions)
+		public ToolBarSplitButton(Codon codon, object caller, IList submenu, ReadOnlyCollection<ICondition> conditions)
 		{
 			ToolTipService.SetShowOnDisabled(this, true);
 			

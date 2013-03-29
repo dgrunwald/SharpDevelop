@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
@@ -21,7 +22,7 @@ namespace ICSharpCode.Core.Presentation
 		readonly string inputGestureText;
 		readonly IEnumerable<ICondition> conditions;
 		
-		public ToolBarButton(UIElement inputBindingOwner, Codon codon, object caller, bool createCommand, IReadOnlyCollection<ICondition> conditions)
+		public ToolBarButton(UIElement inputBindingOwner, Codon codon, object caller, bool createCommand, ReadOnlyCollection<ICondition> conditions)
 		{
 			ToolTipService.SetShowOnDisabled(this, true);
 			

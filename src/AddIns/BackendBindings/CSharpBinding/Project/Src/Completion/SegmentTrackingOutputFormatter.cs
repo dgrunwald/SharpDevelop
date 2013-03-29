@@ -8,6 +8,7 @@ using System.Text;
 using ICSharpCode.AvalonEdit.Document;
 using ICSharpCode.NRefactory.CSharp;
 using ICSharpCode.NRefactory.Editor;
+using ICSharpCode.SharpDevelop;
 using ICSharpCode.SharpDevelop.Editor;
 
 namespace CSharpBinding.Completion
@@ -22,7 +23,7 @@ namespace CSharpBinding.Completion
 		readonly StringWriter stringWriter;
 		
 		public IReadOnlyDictionary<AstNode, ISegment> Segments {
-			get { return segments; }
+			get { return segments.AsReadOnly(); }
 		}
 		
 		public SegmentTrackingOutputFormatter (StringWriter stringWriter)

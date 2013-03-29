@@ -126,7 +126,7 @@ namespace ICSharpCode.SharpDevelop
 			lock (services) {
 				object instance;
 				if (services.TryGetValue(serviceType, out instance)) {
-					return Task.FromResult((T)instance);
+					return TaskEx.FromResult((T)instance);
 				} else {
 					object taskCompletionSource;
 					if (taskCompletionSources.TryGetValue(serviceType, out taskCompletionSource)) {

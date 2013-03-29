@@ -62,7 +62,7 @@ namespace ICSharpCode.SharpDevelop.Dom
 		
 		ITreeNodeFactory CreateService(params Type[] types)
 		{
-			return new TreeNodeFactoryService(types.Select(t => new MockTreeNodeFactory(t)).ToList());
+			return new TreeNodeFactoryService(types.Select(t => new MockTreeNodeFactory(t)).ToListWithReadOnlySupport());
 		}
 		
 		[Test]

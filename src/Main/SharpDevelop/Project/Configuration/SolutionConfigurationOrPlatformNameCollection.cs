@@ -37,7 +37,7 @@ namespace ICSharpCode.SharpDevelop.Project
 		
 		void OnCollectionChanged(IReadOnlyCollection<string> oldItems, IReadOnlyCollection<string> newItems)
 		{
-			this.listSnapshot = list.ToArray();
+			this.listSnapshot = list.ToListWithReadOnlySupport();
 			var eh = CollectionChanged;
 			if (eh != null)
 				eh(oldItems, newItems);
@@ -88,7 +88,7 @@ namespace ICSharpCode.SharpDevelop.Project
 			if (newName == null)
 				throw new ArgumentException();
 			list.Add(newName);
-			OnCollectionChanged(EmptyList<string>.Instance, new[] { newName });
+			OnCollectionChanged(EmptyList<string>.Instance, new[] { newName }.AsReadOnly());
 			
 			if (copyFrom != null) {
 				foreach (var project in solution.Projects) {
@@ -121,7 +121,7 @@ namespace ICSharpCode.SharpDevelop.Project
 				return;
 			name = list[pos]; // get the name in original case
 			list.RemoveAt(pos);
-			OnCollectionChanged(new[] { name }, EmptyList<string>.Instance);
+			OnCollectionChanged(new[] { name }.AsReadOnly(), EmptyList<string>.Instance);
 			
 			foreach (var project in solution.Projects) {
 				var mapping = project.ConfigurationMapping;
@@ -143,7 +143,7 @@ namespace ICSharpCode.SharpDevelop.Project
 			oldName = list[pos]; // get oldName in original case
 			list[pos] = newName;
 			listSnapshot = null;
-			OnCollectionChanged(new[] { oldName }, new[] { newName });
+			OnCollectionChanged(new[] { oldName }.AsReadOnly(), new[] { newName }.AsReadOnly());
 			
 			foreach (var project in solution.Projects) {
 				var mapping = project.ConfigurationMapping;

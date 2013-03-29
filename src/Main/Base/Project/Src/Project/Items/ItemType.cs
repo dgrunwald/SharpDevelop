@@ -19,7 +19,7 @@ namespace ICSharpCode.SharpDevelop.Project
 		public static readonly ItemType COMReference = new ItemType("COMReference");
 		
 		public static readonly IReadOnlyList<ItemType> ReferenceItemTypes
-			= new ItemType[] { Reference, ProjectReference, COMReference };
+			= new ItemType[] { Reference, ProjectReference, COMReference }.AsReadOnly();
 		
 		/// <summary>
 		/// Item type for imported VB namespaces
@@ -46,7 +46,7 @@ namespace ICSharpCode.SharpDevelop.Project
 		/// Gets a collection of item types that are used for files.
 		/// </summary>
 		public static readonly IReadOnlyList<ItemType> DefaultFileItems
-			= new ItemType[] { Compile, EmbeddedResource, None, Content };
+			= new ItemType[] { Compile, EmbeddedResource, None, Content }.AsReadOnly();
 		
 		public static readonly ItemType Resource = new ItemType("Resource");
 		public static readonly ItemType Folder = new ItemType("Folder");
@@ -58,7 +58,7 @@ namespace ICSharpCode.SharpDevelop.Project
 		/// Gets a collection of item types that are known not to be used for files.
 		/// </summary>
 		public static readonly IReadOnlyList<ItemType> NonFileItemTypes
-			= new ItemType[] { Folder, WebReferences, Import  };
+			= new ItemType[] { Folder, WebReferences, Import }.AsReadOnly();
 		
 		readonly string itemName;
 		

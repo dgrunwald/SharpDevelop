@@ -22,7 +22,7 @@ namespace ICSharpCode.SharpDevelop.Editor.Bookmarks
 			Project.ProjectService.SolutionClosed += delegate { Clear(); };
 		}
 		
-		List<SDBookmark> bookmarks = new List<SDBookmark>();
+		ListWithReadOnlySupport<SDBookmark> bookmarks = new ListWithReadOnlySupport<SDBookmark>();
 		
 		public IReadOnlyCollection<SDBookmark> Bookmarks {
 			get {

@@ -30,7 +30,7 @@ namespace ICSharpCode.SharpDevelop.Dom
 		
 		public IReadOnlyCollection<ITypeDefinitionModel> CreateSnapshot()
 		{
-			return dict.Values.ToArray();
+			return dict.Values.ToListWithReadOnlySupport();
 		}
 		
 		public int Count {
@@ -64,8 +64,8 @@ namespace ICSharpCode.SharpDevelop.Dom
 		/// </summary>
 		public void Update(IUnresolvedFile oldFile, IUnresolvedFile newFile)
 		{
-			List<ITypeDefinitionModel> oldModels = null;
-			List<ITypeDefinitionModel> newModels = null;
+			ListWithReadOnlySupport<ITypeDefinitionModel> oldModels = null;
+			ListWithReadOnlySupport<ITypeDefinitionModel> newModels = null;
 			bool[] oldTypeDefHandled = null;
 			if (oldFile != null) {
 				oldTypeDefHandled = new bool[oldFile.TopLevelTypeDefinitions.Count];
@@ -95,7 +95,7 @@ namespace ICSharpCode.SharpDevelop.Dom
 						model = new TypeDefinitionModel(context, newPart);
 						dict.Add(newFullTypeName.TopLevelTypeName, model);
 						if (newModels == null)
-							newModels = new List<ITypeDefinitionModel>();
+							newModels = new ListWithReadOnlySupport<ITypeDefinitionModel>();
 						newModels.Add(model);
 					}
 				}
@@ -114,7 +114,7 @@ namespace ICSharpCode.SharpDevelop.Dom
 							} else {
 								dict.Remove(topLevelTypeName);
 								if (oldModels == null)
-									oldModels = new List<ITypeDefinitionModel>();
+									oldModels = new ListWithReadOnlySupport<ITypeDefinitionModel>();
 								oldModels.Add(model);
 							}
 						}

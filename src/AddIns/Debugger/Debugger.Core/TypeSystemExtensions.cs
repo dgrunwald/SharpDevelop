@@ -71,7 +71,7 @@ namespace Debugger
 				}
 			}
 			
-			public IReadOnlyList<ITypeReference> GetLocalVariableTypes(IUnresolvedMember member)
+			public IList<ITypeReference> GetLocalVariableTypes(IUnresolvedMember member)
 			{
 				rwLock.EnterReadLock();
 				try {
@@ -138,10 +138,10 @@ namespace Debugger
 		{
 			string name = corModule.GetName();
 			if (corModule.IsDynamic() == 1 || corModule.IsInMemory() == 1)
-				return Task.FromResult<IUnresolvedAssembly>(new DefaultUnresolvedAssembly(name));
+				return TaskEx.FromResult<IUnresolvedAssembly>(new DefaultUnresolvedAssembly(name));
 			
 			//return Task.FromResult(LoadModule(module, name));
-			return Task.Run(() => LoadModule(module, name));
+			return TaskEx.Run(() => LoadModule(module, name));
 		}
 		
 		static IUnresolvedAssembly LoadModule(Module module, string fileName)

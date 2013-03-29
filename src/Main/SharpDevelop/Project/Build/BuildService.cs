@@ -51,7 +51,7 @@ namespace ICSharpCode.SharpDevelop.Project
 				results.Result = BuildResultCode.MSBuildAlreadyRunning;
 				return results;
 			}
-			var projectsList = projects.ToList();
+			var projectsList = projects.ToListWithReadOnlySupport();
 			guiBuildCancellation = new CancellationTokenSource();
 			try {
 				using (var progressMonitor = SD.StatusBar.CreateProgressMonitor(guiBuildCancellation.Token)) {
@@ -103,7 +103,7 @@ namespace ICSharpCode.SharpDevelop.Project
 			if (project != null)
 				return BuildAsync(new[] { project }, options);
 			else
-				return Task.FromResult(new BuildResults { Result = BuildResultCode.Error });
+				return TaskEx.FromResult(new BuildResults { Result = BuildResultCode.Error });
 		}
 		
 		public Task<BuildResults> BuildAsync(ISolution solution, BuildOptions options)
@@ -113,7 +113,7 @@ namespace ICSharpCode.SharpDevelop.Project
 			                                                         options.SolutionPlatform ?? solution.ActiveConfiguration.Platform);
 				return BuildAsync(solution.Projects.Where(p => p.ConfigurationMapping.IsBuildEnabled(solutionConfiguration)), options);
 			} else {
-				return Task.FromResult(new BuildResults { Result = BuildResultCode.Error });
+				return TaskEx.FromResult(new BuildResults { Result = BuildResultCode.Error });
 			}
 		}
 		

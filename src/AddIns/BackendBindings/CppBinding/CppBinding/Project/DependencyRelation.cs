@@ -57,7 +57,7 @@ namespace ICSharpCode.CppBinding.Project
 		/// Returns a list of items given element directly depend on.
 		/// If there is no element in the dependency relation, returns an empty list.
 		/// </summary>
-		public IReadOnlyList<T2> DependOn(T1 element)
+		public IList<T2> DependOn(T1 element)
 		{
 			return dep[element];
 		}
@@ -85,7 +85,7 @@ namespace ICSharpCode.CppBinding.Project
 		/// If the is no item that depend on given element, returns an empty list.
 		/// </summary>
 		/// <returns></returns>
-		public IReadOnlyList<T1> DependingOn(T2 element)
+		public IList<T1> DependingOn(T2 element)
 		{
 			return revDep[element];
 		}

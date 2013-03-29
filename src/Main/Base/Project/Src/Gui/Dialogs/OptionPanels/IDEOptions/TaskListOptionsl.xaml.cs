@@ -79,7 +79,7 @@ namespace ICSharpCode.SharpDevelop.Gui.OptionPanels
 					tokens.Add(text);
 				}
 			}
-			SD.ParserService.TaskListTokens = tokens.ToArray();
+			SD.ParserService.TaskListTokens = tokens.ToListWithReadOnlySupport();
 			return true;
 		}
 	}

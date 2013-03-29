@@ -538,7 +538,7 @@ namespace ICSharpCode.SharpDevelop.Project
 		{
 			feedbackSink.ReportError(new BuildError { ErrorText = "Building project " + Name + " is not supported.", IsWarning = true });
 			// we don't know how to build anything, report that we're done.
-			return Task.FromResult(true);
+			return TaskEx.FromResult(true);
 		}
 		
 		public virtual IEnumerable<IBuildable> GetBuildDependencies(ProjectBuildOptions buildOptions)

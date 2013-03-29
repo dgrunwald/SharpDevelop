@@ -24,8 +24,8 @@ namespace ICSharpCode.SharpDevelop
 		/// </summary>
 		int MAX_LENGTH = 10;
 		
-		ObservableCollection<string> recentFiles    = new ObservableCollection<string>();
-		ObservableCollection<string> recentProjects = new ObservableCollection<string>();
+		ObservableCollectionWithReadOnlySupport<string> recentFiles    = new ObservableCollectionWithReadOnlySupport<string>();
+		ObservableCollectionWithReadOnlySupport<string> recentProjects = new ObservableCollectionWithReadOnlySupport<string>();
 		Properties properties;
 		
 		public IReadOnlyList<string> RecentFiles {

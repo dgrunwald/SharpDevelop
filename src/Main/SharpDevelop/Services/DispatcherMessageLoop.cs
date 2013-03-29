@@ -52,10 +52,7 @@ namespace ICSharpCode.SharpDevelop
 		
 		public void InvokeIfRequired(Action callback)
 		{
-			if (dispatcher.CheckAccess())
-				callback();
-			else
-				dispatcher.Invoke(callback);
+			InvokeIfRequired(callback, DispatcherPriority.Send);
 		}
 		
 		public void InvokeIfRequired(Action callback, DispatcherPriority priority)
@@ -71,15 +68,12 @@ namespace ICSharpCode.SharpDevelop
 			if (dispatcher.CheckAccess())
 				callback();
 			else
-				dispatcher.Invoke(callback, priority, cancellationToken);
+				InvokeAsync(callback, priority, cancellationToken).GetAwaiter().GetResult();
 		}
 		
 		public T InvokeIfRequired<T>(Func<T> callback)
 		{
-			if (dispatcher.CheckAccess())
-				return callback();
-			else
-				return dispatcher.Invoke(callback);
+			return InvokeIfRequired(callback, DispatcherPriority.Send);
 		}
 		
 		public T InvokeIfRequired<T>(Func<T> callback, DispatcherPriority priority)
@@ -87,7 +81,7 @@ namespace ICSharpCode.SharpDevelop
 			if (dispatcher.CheckAccess())
 				return callback();
 			else
-				return dispatcher.Invoke(callback, priority);
+				return (T)dispatcher.Invoke(callback, priority);
 		}
 		
 		public T InvokeIfRequired<T>(Func<T> callback, DispatcherPriority priority, CancellationToken cancellationToken)
@@ -95,37 +89,54 @@ namespace ICSharpCode.SharpDevelop
 			if (dispatcher.CheckAccess())
 				return callback();
 			else
-				return dispatcher.Invoke(callback, priority, cancellationToken);
+				return InvokeAsync(callback, priority, cancellationToken).GetAwaiter().GetResult();
 		}
 		
 		public Task InvokeAsync(Action callback)
 		{
-			return dispatcher.InvokeAsync(callback).Task;
+			return InvokeAsync(callback, DispatcherPriority.Send, CancellationToken.None);
 		}
 		
 		public Task InvokeAsync(Action callback, DispatcherPriority priority)
 		{
-			return dispatcher.InvokeAsync(callback, priority).Task;
+			return InvokeAsync(callback, priority, CancellationToken.None);
 		}
 		
 		public Task InvokeAsync(Action callback, DispatcherPriority priority, CancellationToken cancellationToken)
 		{
-			return dispatcher.InvokeAsync(callback, priority, cancellationToken).Task;
+			return InvokeAsync<object>(delegate { callback(); return null; }, priority, cancellationToken);
 		}
 		
 		public Task<T> InvokeAsync<T>(Func<T> callback)
 		{
-			return dispatcher.InvokeAsync(callback).Task;
+			return InvokeAsync(callback, DispatcherPriority.Send, CancellationToken.None);
 		}
 		
 		public Task<T> InvokeAsync<T>(Func<T> callback, DispatcherPriority priority)
 		{
-			return dispatcher.InvokeAsync(callback, priority).Task;
+			return InvokeAsync(callback, priority, CancellationToken.None);
 		}
 		
 		public Task<T> InvokeAsync<T>(Func<T> callback, DispatcherPriority priority, CancellationToken cancellationToken)
 		{
-			return dispatcher.InvokeAsync(callback, priority, cancellationToken).Task;
+			TaskCompletionSource<T> tcs = new TaskCompletionSource<T>();
+			if (cancellationToken.IsCancellationRequested) {
+				tcs.TrySetCanceled();
+				return tcs.Task;
+			}
+			var cancellationRegistration = cancellationToken.Register(delegate { tcs.TrySetCanceled(); });
+			dispatcher.BeginInvoke(new Action(
+				delegate {
+					try {
+						if (!cancellationToken.IsCancellationRequested)
+							tcs.TrySetResult(callback());
+					} catch (Exception exception) {
+						tcs.TrySetException(exception);
+					} finally {
+						cancellationRegistration.Dispose();
+					}
+				}), priority);
+			return tcs.Task;
 		}
 		
 		public void InvokeAsyncAndForget(Action callback)
@@ -140,13 +151,19 @@ namespace ICSharpCode.SharpDevelop
 		
 		public async void CallLater(TimeSpan delay, Action method)
 		{
-			await Task.Delay(delay).ConfigureAwait(false);
+			await TaskEx.Delay(delay).ConfigureAwait(false);
 			InvokeAsyncAndForget(method);
 		}
 		
 		IAsyncResult ISynchronizeInvoke.BeginInvoke(Delegate method, object[] args)
 		{
-			return dispatcher.BeginInvoke(method, args).Task;
+			TaskCompletionSource<object> tcs = new TaskCompletionSource<object>();
+			var op = dispatcher.BeginInvoke(method, args);
+			op.Completed += delegate { tcs.TrySetResult(null); };
+			// check after registering the event handler to handle race condition
+			if (op.Status == DispatcherOperationStatus.Completed)
+				tcs.TrySetResult(null);
+			return tcs.Task;
 		}
 		
 		object ISynchronizeInvoke.EndInvoke(IAsyncResult result)

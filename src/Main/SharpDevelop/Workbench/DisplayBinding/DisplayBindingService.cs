@@ -139,7 +139,7 @@ namespace ICSharpCode.SharpDevelop.Workbench
 		{
 			SD.MainThread.VerifyAccess();
 			
-			List<DisplayBindingDescriptor> list = new List<DisplayBindingDescriptor>();
+			var list = new ListWithReadOnlySupport<DisplayBindingDescriptor>();
 			foreach (DisplayBindingDescriptor binding in bindings) {
 				if (IsPrimaryBindingValidForFileName(binding, filename)) {
 					list.Add(binding);

@@ -30,7 +30,7 @@ namespace ICSharpCode.SharpDevelop.Project
 		
 		internal void SetContents(IEnumerable<string> updatedItems)
 		{
-			this.listSnapshot = updatedItems.ToArray();
+			this.listSnapshot = updatedItems.ToListWithReadOnlySupport();
 		}
 		
 		internal void OnCollectionChanged(IReadOnlyCollection<string> oldItems, IReadOnlyCollection<string> newItems)

@@ -20,7 +20,7 @@ namespace ICSharpCode.WpfDesign.Designer.Controls
 	sealed class AdornerLayer : Panel
 	{
 		#region AdornerPanelCollection
-		internal sealed class AdornerPanelCollection : ICollection<AdornerPanel>, IReadOnlyCollection<AdornerPanel>
+		internal sealed class AdornerPanelCollection : ICollection<AdornerPanel>
 		{
 			readonly AdornerLayer _layer;
 			

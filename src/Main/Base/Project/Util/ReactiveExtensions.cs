@@ -169,7 +169,7 @@ namespace ICSharpCode.SharpDevelop
 		
 		static async Task<T> SingleInternalAsync<T>(IObservable<T> source, CancellationToken cancellationToken, bool throwIfEmpty)
 		{
-			SemaphoreSlim gate = new SemaphoreSlim(0);
+			Gate gate = new Gate();
 			T value = default(T);
 			bool isEmpty = true;
 			Exception ex = null;
@@ -212,7 +212,7 @@ namespace ICSharpCode.SharpDevelop
 		
 		static async Task<T> LastInternalAsync<T>(IObservable<T> source, CancellationToken cancellationToken, bool throwIfEmpty)
 		{
-			SemaphoreSlim gate = new SemaphoreSlim(0);
+			Gate gate = new Gate();
 			T value = default(T);
 			bool isEmpty = true;
 			Exception ex = null;

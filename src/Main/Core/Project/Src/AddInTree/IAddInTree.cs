@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace ICSharpCode.Core
 {
@@ -13,7 +14,7 @@ namespace ICSharpCode.Core
 		/// <summary>
 		/// Gets the AddIns that are registered for this AddIn tree.
 		/// </summary>
-		IReadOnlyList<AddIn> AddIns { get; }
+		ReadOnlyCollection<AddIn> AddIns { get; }
 		
 		/// <summary>
 		/// Gets a dictionary of registered doozers.
@@ -33,7 +34,7 @@ namespace ICSharpCode.Core
 		/// <param name="throwOnNotFound">If true, throws a <see cref="TreePathNotFoundException"/>
 		/// if the path is not found. If false, an empty ArrayList is returned when the
 		/// path is not found.</param>
-		IReadOnlyList<T> BuildItems<T>(string path, object parameter, bool throwOnNotFound = true);
+		ReadOnlyCollection<T> BuildItems<T>(string path, object parameter, bool throwOnNotFound = true);
 		
 		/// <summary>
 		/// Builds a single item in the addin tree.

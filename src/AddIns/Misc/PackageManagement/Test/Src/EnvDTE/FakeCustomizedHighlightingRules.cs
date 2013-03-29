@@ -5,12 +5,13 @@ using System;
 using System.Collections.Generic;
 using ICSharpCode.AvalonEdit.AddIn;
 using ICSharpCode.PackageManagement.EnvDTE;
+using ICSharpCode.SharpDevelop;
 
 namespace PackageManagement.Tests.EnvDTE
 {
 	public class FakeCustomizedHighlightingRules : ICustomizedHighlightingRules
 	{
-		public List<CustomizedHighlightingColor> Colors = new List<CustomizedHighlightingColor>();
+		public ListWithReadOnlySupport<CustomizedHighlightingColor> Colors = new ListWithReadOnlySupport<CustomizedHighlightingColor>();
 		
 		public IReadOnlyList<CustomizedHighlightingColor> LoadColors()
 		{

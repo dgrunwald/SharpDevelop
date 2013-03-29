@@ -35,7 +35,7 @@ namespace SearchAndReplace
 			set {
 				if (value != FindPattern) {
 					findPattern = value;
-					List<string> patterns = FindPatterns.ToList();
+					var patterns = FindPatterns.ToListWithReadOnlySupport();
 					patterns.Insert(0, value);
 					FindPatterns = patterns;
 				}
@@ -53,7 +53,7 @@ namespace SearchAndReplace
 		
 		public static IReadOnlyList<string> FindPatterns {
 			get {
-				return properties.GetList<string>("FindPatterns");
+				return properties.GetList<string>("FindPatterns").AsReadOnly();
 			}
 			set {
 				properties.SetList("FindPatterns", value);
@@ -69,7 +69,7 @@ namespace SearchAndReplace
 			}
 			set {
 				if (value != ReplacePattern) {
-					List<string> patterns = ReplacePatterns.ToList();
+					var patterns = ReplacePatterns.ToListWithReadOnlySupport();
 					patterns.Insert(0, value);
 					ReplacePatterns = patterns;
 					replacePattern = value;
@@ -79,7 +79,7 @@ namespace SearchAndReplace
 		
 		public static IReadOnlyList<string> ReplacePatterns {
 			get {
-				return properties.GetList<string>("ReplacePatterns");
+				return properties.GetList<string>("ReplacePatterns").AsReadOnly();
 			}
 			set {
 				properties.SetList("ReplacePatterns", value);

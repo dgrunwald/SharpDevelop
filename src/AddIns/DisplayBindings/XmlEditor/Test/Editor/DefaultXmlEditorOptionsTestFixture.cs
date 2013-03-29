@@ -56,7 +56,7 @@ namespace XmlEditor.Tests.Editor
 				properties.Set<string>("namespacePrefix", "e");
 				addinTreeNode.AddCodons(
 					new Codon[] {
-						new Codon(addin, "SchemaAssociation", properties, new ICondition[0])
+						new Codon(addin, "SchemaAssociation", properties, Array.AsReadOnly(new ICondition[0]))
 					});
 				
 				return new DefaultXmlSchemaFileAssociations(addinTreeNode);

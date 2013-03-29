@@ -90,18 +90,18 @@ namespace ICSharpCode.SharpDevelop.Gui
 		{
 			IWorkbenchWindow window = SD.Workbench.ActiveWorkbenchWindow;
 			if (window == null) 
-				return Task.FromResult<ResolveResult>(null);
+				return TaskEx.FromResult<ResolveResult>(null);
 			IViewContent viewContent = window.ActiveViewContent;
 			if (viewContent == null) 
-				return Task.FromResult<ResolveResult>(null);
+				return TaskEx.FromResult<ResolveResult>(null);
 			ITextEditor editor = viewContent.GetService<ITextEditor>();
 			if (editor == null)
-				return Task.FromResult<ResolveResult>(null);
+				return TaskEx.FromResult<ResolveResult>(null);
 			
 			// e might be null when this is a manually triggered update
 			// don't resolve when an unrelated file was changed
 			if (e != null && editor.FileName != e.FileName)
-				return Task.FromResult<ResolveResult>(null);
+				return TaskEx.FromResult<ResolveResult>(null);
 			
 			return SD.ParserService.ResolveAsync(editor.FileName, editor.Caret.Location, editor.Document);
 		}

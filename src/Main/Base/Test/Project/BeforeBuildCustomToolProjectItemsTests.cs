@@ -64,7 +64,7 @@ namespace ICSharpCode.SharpDevelop.Project
 		
 		void CreateBeforeBuildCustomToolProjectItems()
 		{
-			CreateBeforeBuildCustomToolProjectItems(new[] { projectHelper.Project });
+			CreateBeforeBuildCustomToolProjectItems(new[] { projectHelper.Project }.AsReadOnly());
 		}
 		
 		void CreateBeforeBuildCustomToolProjectItems(IReadOnlyList<IProject> projects)
@@ -74,7 +74,7 @@ namespace ICSharpCode.SharpDevelop.Project
 		
 		void CreateBeforeBuildCustomToolProjectItemsUsingSolution()
 		{
-			CreateBeforeBuildCustomToolProjectItems(solution.Projects.ToList());
+			CreateBeforeBuildCustomToolProjectItems(solution.Projects.ToListWithReadOnlySupport());
 		}
 		
 		FileProjectItem AddFileToProject(string include)

@@ -78,7 +78,7 @@ namespace ICSharpCode.SharpDevelop.Workbench
 			}
 		}
 		
-		readonly EncodingInfo[] allEncodings = Encoding.GetEncodings().OrderBy(e => e.DisplayName).ToArray();
+		readonly IReadOnlyList<EncodingInfo> allEncodings = Encoding.GetEncodings().OrderBy(e => e.DisplayName).ToListWithReadOnlySupport();
 		
 		public IReadOnlyList<EncodingInfo> AllEncodings {
 			get { return allEncodings; }
@@ -165,7 +165,7 @@ namespace ICSharpCode.SharpDevelop.Workbench
 		public IReadOnlyList<OpenedFile> OpenedFiles {
 			get {
 				SD.MainThread.VerifyAccess();
-				return openedFileDict.Values.ToArray();
+				return openedFileDict.Values.ToListWithReadOnlySupport();
 			}
 		}
 		
@@ -385,7 +385,7 @@ namespace ICSharpCode.SharpDevelop.Workbench
 		/// <inheritdoc/>
 		public IReadOnlyList<FileName> OpenPrimaryFiles {
 			get {
-				List<FileName> fileNames = new List<FileName>();
+				var fileNames = new ListWithReadOnlySupport<FileName>();
 				foreach (IViewContent content in SD.Workbench.ViewContentCollection) {
 					FileName contentName = content.PrimaryFileName;
 					if (contentName != null && !fileNames.Contains(contentName))

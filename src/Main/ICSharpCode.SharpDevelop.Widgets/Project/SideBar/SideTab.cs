@@ -390,7 +390,7 @@ namespace ICSharpCode.SharpDevelop.Widgets.SideBar
 			}
 		}
 
-		public class SideTabItemCollection : ICollection<SideTabItem>, IReadOnlyCollection<SideTabItem>
+		public class SideTabItemCollection : ICollection<SideTabItem>
 		{
 			List<SideTabItem> list = new List<SideTabItem>();
 			ISideTabItemFactory sideTabItemFactory = new DefaultSideTabItemFactory();

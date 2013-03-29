@@ -34,3 +34,8 @@ namespace ICSharpCode.SharpDevelop.Widgets
 		}
 	}
 }
+namespace System.Runtime.CompilerServices
+{
+	[AttributeUsageAttribute(AttributeTargets.Parameter, Inherited = false)]
+	public class CallerMemberNameAttribute : Attribute {}
+}
