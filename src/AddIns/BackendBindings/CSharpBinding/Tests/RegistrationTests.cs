@@ -21,12 +21,12 @@ namespace CSharpBinding.Tests
 	public class RegistrationTests
 	{
 		Type[] exceptions = {
-			typeof(MultipleEnumerationIssue), // disabled due to https://github.com/icsharpcode/NRefactory/issues/123
+			typeof(PossibleMultipleEnumerationIssue), // disabled due to https://github.com/icsharpcode/NRefactory/issues/123
 			typeof(RedundantAssignmentIssue), // disabled due to https://github.com/icsharpcode/NRefactory/issues/123
-			typeof(RedundantTypeCastIssue), // disabled due to plenty of false positives (e.g. when cast is necessary for overload resolution)
+			typeof(RedundantCastIssue), // disabled due to plenty of false positives (e.g. when cast is necessary for overload resolution)
 		};
 		
-		Assembly NRCSharp = typeof(ICodeIssueProvider).Assembly;
+		Assembly NRCSharp = typeof(CodeIssueProvider).Assembly;
 		Assembly CSharpBinding = typeof(SDRefactoringContext).Assembly;
 		
 		AddIn addIn;
