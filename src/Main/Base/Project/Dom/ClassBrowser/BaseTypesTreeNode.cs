@@ -3,17 +3,22 @@
 
 using System;
 using System.Linq;
+using ICSharpCode.Core;
 using ICSharpCode.NRefactory.TypeSystem;
+using ICSharpCode.TreeView;
+using ICSharpCode.SharpDevelop.Parser;
+using ICSharpCode.SharpDevelop.Project;
 
 namespace ICSharpCode.SharpDevelop.Dom.ClassBrowser
 {
 	/// <summary>
-	/// Description of BaseTypesTreeNode.
+	/// Represents the "Base types" sub-node of type nodes in ClassBrowser tree.
 	/// </summary>
 	public class BaseTypesTreeNode : ModelCollectionTreeNode
 	{
 		ITypeDefinitionModel definition;
 		string text;
+		bool childrenLoaded;
 		SimpleModelCollection<ITypeDefinitionModel> baseTypes;
 		
 		public BaseTypesTreeNode(ITypeDefinitionModel definition)
@@ -24,18 +29,27 @@ namespace ICSharpCode.SharpDevelop.Dom.ClassBrowser
 			this.definition.Updated += (sender, e) => UpdateBaseTypes();
 			this.text = SD.ResourceService.GetString("MainWindow.Windows.ClassBrowser.BaseTypes");
 			baseTypes = new SimpleModelCollection<ITypeDefinitionModel>();
-			UpdateBaseTypes();
+			childrenLoaded = false;
 		}
 
 		protected override IModelCollection<object> ModelChildren {
 			get {
+				if (!childrenLoaded) {
+					UpdateBaseTypes();
+					childrenLoaded = true;
+				}
 				return baseTypes;
 			}
 		}
 		
-		public bool HasBaseTypes()
+		public override SharpTreeNode FindChildNodeRecursively(Func<SharpTreeNode, bool> predicate)
 		{
-			return baseTypes.Count > 0;
+			// Don't search children of this node, because they are repeating type nodes from elsewhere
+			return null;
+		}
+		
+		public override bool CanFindChildNodeRecursively {
+			get { return false; }
 		}
 		
 		void UpdateBaseTypes()
@@ -45,8 +59,8 @@ namespace ICSharpCode.SharpDevelop.Dom.ClassBrowser
 			if (currentTypeDef != null) {
 				foreach (var baseType in currentTypeDef.DirectBaseTypes) {
 					ITypeDefinition baseTypeDef = baseType.GetDefinition();
-					if (baseTypeDef != null) {
-						ITypeDefinitionModel baseTypeModel = GetTypeDefinitionModel(baseTypeDef);
+					if ((baseTypeDef != null)) {
+						ITypeDefinitionModel baseTypeModel = GetTypeDefinitionModel(currentTypeDef, baseTypeDef);
 						if (baseTypeModel != null)
 							baseTypes.Add(baseTypeModel);
 					}
@@ -54,25 +68,65 @@ namespace ICSharpCode.SharpDevelop.Dom.ClassBrowser
 			}
 		}
 		
-		ITypeDefinitionModel GetTypeDefinitionModel(ITypeDefinition definition)
+		ITypeDefinitionModel GetTypeDefinitionModel(ITypeDefinition mainTypeDefinition, ITypeDefinition baseTypeDefinition)
 		{
-			ITypeDefinitionModel model = definition.GetModel();
-			if (model == null) {
-				// Try to get model from ClassBrowser's assembly list
-				var classBrowser = SD.GetService<IClassBrowser>();
-				if (classBrowser != null) {
-					foreach (var assemblyModel in classBrowser.MainAssemblyList.Assemblies) {
-						model = assemblyModel.TopLevelTypeDefinitions[definition.FullTypeName];
-						if (model != null) {
-							return model;
+			ITypeDefinitionModel resolveTypeDefModel = null;
+			var assemblyFileName = mainTypeDefinition.ParentAssembly.GetRuntimeAssemblyLocation();
+			IAssemblyModel assemblyModel = null;
+			
+			try {
+				// Try to get AssemblyModel from project list
+				IProjectService projectService = SD.GetRequiredService<IProjectService>();
+				if (projectService.CurrentSolution != null) {
+					var projectOfAssembly = projectService.CurrentSolution.Projects.FirstOrDefault(p => p.AssemblyModel.Location == assemblyFileName);
+					if (projectOfAssembly != null) {
+						// We automatically have an AssemblyModel from project
+						assemblyModel = projectOfAssembly.AssemblyModel;
+					}
+				}
+				
+				var assemblyParserService = SD.GetService<IAssemblyParserService>();
+				if (assemblyModel == null) {
+					if (assemblyParserService != null) {
+						if (assemblyFileName != null) {
+							assemblyModel = assemblyParserService.GetAssemblyModel(assemblyFileName);
 						}
 					}
 				}
+				
+				if (assemblyModel != null) {
+					// Nothing in projects, load from assembly file
+					resolveTypeDefModel = assemblyModel.TopLevelTypeDefinitions[baseTypeDefinition.FullTypeName];
+					if (resolveTypeDefModel != null) {
+						return resolveTypeDefModel;
+					}
+					
+					// Look at referenced assemblies
+					if ((assemblyModel.References != null) && (assemblyParserService != null)) {
+						foreach (var referencedAssemblyName in assemblyModel.References.AssemblyNames) {
+							CombinedAssemblySearcher searcher = new CombinedAssemblySearcher();
+							if ((assemblyModel.Context != null) && (assemblyModel.Context.Project != null)) {
+								searcher.AddSearcher(new ProjectAssemblyReferenceSearcher(assemblyModel.Context.Project));
+							}
+							searcher.AddSearcher(new DefaultAssemblySearcher(assemblyModel.Location));
+							var resolvedFile = searcher.FindAssembly(referencedAssemblyName.AssemblyName);
+							if (resolvedFile != null) {
+								var referenceAssemblyModel = assemblyParserService.GetAssemblyModel(resolvedFile);
+								resolveTypeDefModel = referenceAssemblyModel.TopLevelTypeDefinitions[baseTypeDefinition.FullTypeName];
+								if (resolveTypeDefModel != null) {
+									return resolveTypeDefModel;
+								}
+							}
+						}
+					}
+				}
+			} catch (Exception) {
+				// TODO Can't load the type, what to do?
 			}
 			
-			return model;
+			return resolveTypeDefModel;
 		}
-
+		
 		protected override System.Collections.Generic.IComparer<ICSharpCode.TreeView.SharpTreeNode> NodeComparer {
 			get {
 				return NodeTextComparer;

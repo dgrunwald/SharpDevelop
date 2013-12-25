@@ -9,10 +9,12 @@ using System.Runtime.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using ICSharpCode.Core;
+using ICSharpCode.NRefactory;
 using ICSharpCode.NRefactory.Editor;
 using ICSharpCode.NRefactory.TypeSystem;
 using ICSharpCode.NRefactory.TypeSystem.Implementation;
 using ICSharpCode.NRefactory.Utils;
+using ICSharpCode.SharpDevelop.Dom;
 using ICSharpCode.SharpDevelop.Gui;
 using ICSharpCode.SharpDevelop.Project;
 
@@ -22,6 +24,7 @@ namespace ICSharpCode.SharpDevelop.Parser
 	{
 		readonly IProject project;
 		readonly IParserService parserService = SD.ParserService;
+		readonly IUpdateableAssemblyModel assemblyModel;
 		
 		/// <summary>
 		/// Lock for accessing mutable fields of this class.
@@ -44,7 +47,7 @@ namespace ICSharpCode.SharpDevelop.Parser
 		// time necessary for loading references, in relation to time for a single C# file
 		const int LoadingReferencesWorkAmount = 15;
 		
-		string cacheFileName;
+		readonly string cacheFileName;
 		
 		#region Constructor + Dispose
 		public ProjectContentContainer(MSBuildBasedProject project, IProjectContent initialProjectContent)
@@ -53,13 +56,15 @@ namespace ICSharpCode.SharpDevelop.Parser
 				throw new ArgumentNullException("project");
 			this.project = project;
 			this.projectContent = initialProjectContent.SetAssemblyName(project.AssemblyName).SetLocation(project.OutputAssemblyFullPath);
-			
+			this.assemblyModel = (IUpdateableAssemblyModel)project.AssemblyModel;
+			this.assemblyModel.AssemblyName = this.projectContent.AssemblyName;
+			this.assemblyModel.FullAssemblyName = this.projectContent.FullAssemblyName;
 			this.cacheFileName = GetCacheFileName(project.FileName);
 			
 			SD.ProjectService.ProjectItemAdded += OnProjectItemAdded;
 			SD.ProjectService.ProjectItemRemoved += OnProjectItemRemoved;
+			SD.AssemblyParserService.AssemblyRefreshed += OnAssemblyRefreshed;
 			
-			var parserService = SD.ParserService;
 			List<FileName> filesToParse = new List<FileName>();
 			foreach (var file in project.Items.OfType<FileProjectItem>()) {
 				if (IsParseableFile(file)) {
@@ -78,6 +83,8 @@ namespace ICSharpCode.SharpDevelop.Parser
 		{
 			SD.ProjectService.ProjectItemAdded   -= OnProjectItemAdded;
 			SD.ProjectService.ProjectItemRemoved -= OnProjectItemRemoved;
+			SD.AssemblyParserService.AssemblyRefreshed -= OnAssemblyRefreshed;
+			
 			IProjectContent pc;
 			bool serializeOnDispose;
 			lock (lockObj) {
@@ -239,6 +246,7 @@ namespace ICSharpCode.SharpDevelop.Parser
 						projectContent = projectContent.RemoveFiles(oldFile.FileName);
 					serializedProjectContentIsUpToDate = false;
 					SD.ParserService.InvalidateCurrentSolutionSnapshot();
+					SD.MainThread.InvokeAsyncAndForget(delegate { assemblyModel.Update(oldFile, newFile); });
 				}
 			}
 		}
@@ -250,6 +258,8 @@ namespace ICSharpCode.SharpDevelop.Parser
 					if (projectContent.FullAssemblyName == newAssemblyName)
 						return;
 					projectContent = projectContent.SetAssemblyName(newAssemblyName);
+					assemblyModel.AssemblyName = projectContent.AssemblyName;
+					assemblyModel.FullAssemblyName = projectContent.FullAssemblyName;
 					SD.ParserService.InvalidateCurrentSolutionSnapshot();
 				}
 			}
@@ -313,7 +323,6 @@ namespace ICSharpCode.SharpDevelop.Parser
 		
 		void ParseFiles(List<FileName> filesToParse, IProgressMonitor progressMonitor)
 		{
-			IParserService parserService = SD.ParserService;
 			IProjectContent cachedPC = TryReadFromCache(cacheFileName);
 			ParseableFileContentFinder finder = new ParseableFileContentFinder();
 			
@@ -359,6 +368,7 @@ namespace ICSharpCode.SharpDevelop.Parser
 							if (IsSerializable(unresolvedFile))
 								fileCountParsedAndSerializable++;
 						}
+//						SD.MainThread.InvokeAsyncAndForget(delegate { assemblyModel.Update(null, unresolvedFile); });
 						progressMonitor.Progress += fileCountInverse;
 					}
 				});
@@ -391,7 +401,6 @@ namespace ICSharpCode.SharpDevelop.Parser
 		
 		void DoReparseCode(List<FileName> filesToParse, IProgressMonitor progressMonitor)
 		{
-			IParserService parserService = SD.ParserService;
 			ParseableFileContentFinder finder = new ParseableFileContentFinder();
 			double fileCountInverse = 1.0 / filesToParse.Count;
 			object progressLock = new object();
@@ -424,7 +433,7 @@ namespace ICSharpCode.SharpDevelop.Parser
 			progressMonitor.Progress += assemblyResolvingProgress;
 			progressMonitor.CancellationToken.ThrowIfCancellationRequested();
 			
-			List<string> assemblyFiles = new List<string>();
+			List<FileName> assemblyFiles = new List<FileName>();
 			List<IAssemblyReference> newReferences = new List<IAssemblyReference>();
 			
 			foreach (var reference in referenceItems) {
@@ -436,10 +445,10 @@ namespace ICSharpCode.SharpDevelop.Parser
 				}
 			}
 			
-			foreach (string file in assemblyFiles) {
+			foreach (var file in assemblyFiles) {
 				progressMonitor.CancellationToken.ThrowIfCancellationRequested();
 				if (File.Exists(file)) {
-					var pc = SD.AssemblyParserService.GetAssembly(FileName.Create(file), progressMonitor.CancellationToken);
+					var pc = SD.AssemblyParserService.GetAssembly(file, false, progressMonitor.CancellationToken);
 					if (pc != null) {
 						newReferences.Add(pc);
 					}
@@ -451,6 +460,10 @@ namespace ICSharpCode.SharpDevelop.Parser
 					projectContent = projectContent.RemoveAssemblyReferences(this.references).AddAssemblyReferences(newReferences);
 					this.references = newReferences.ToArray();
 					SD.ParserService.InvalidateCurrentSolutionSnapshot();
+					SD.MainThread.InvokeAsyncAndForget(
+						delegate {
+							assemblyModel.UpdateReferences(projectContent.AssemblyReferences.Select(ResolveReferenceForAssemblyModel).Where(r => r != null).ToList());
+						});
 				}
 			}
 		}
@@ -467,6 +480,38 @@ namespace ICSharpCode.SharpDevelop.Parser
 					},
 					"Loading " + project.Name + "...", LoadingReferencesWorkAmount);
 			}
+		}
+		
+		void OnAssemblyRefreshed(object sender, RefreshAssemblyEventArgs e)
+		{
+			lock (lockObj) {
+				int index = Array.IndexOf(this.references, e.OldAssembly);
+				if (index >= 0 && e.NewAssembly != null) {
+					this.references[index] = e.NewAssembly;
+					projectContent = projectContent.RemoveAssemblyReferences(e.OldAssembly).AddAssemblyReferences(e.NewAssembly);
+					SD.ParserService.InvalidateCurrentSolutionSnapshot();
+					SD.MainThread.InvokeAsyncAndForget(
+						delegate {
+							assemblyModel.UpdateReferences(projectContent.AssemblyReferences.Select(ResolveReferenceForAssemblyModel).Where(r => r != null).ToList());
+						});
+				}
+			}
+		}
+		
+		DomAssemblyName ResolveReferenceForAssemblyModel(IAssemblyReference reference)
+		{
+			if (reference is IUnresolvedAssembly)
+				return new DomAssemblyName(((IUnresolvedAssembly)reference).FullAssemblyName);
+			if (reference is ProjectReferenceProjectItem) {
+				var project = ((ProjectReferenceProjectItem)reference).ReferencedProject;
+				if (project == null) return null;
+				if (project.ProjectContent == null) {
+					SD.Log.InfoFormatted("ResolveReference: ProjectContent for project '{0}', language {1} was not found. Cannot resolve reference!", project.Name, project.Language);
+					return null;
+				}
+				return new DomAssemblyName(project.ProjectContent.FullAssemblyName);
+			}
+			return null;
 		}
 		#endregion
 		
@@ -505,5 +550,9 @@ namespace ICSharpCode.SharpDevelop.Parser
 			}
 		}
 		#endregion
+		
+		public IAssemblyModel AssembyModel {
+			get { return assemblyModel; }
+		}
 	}
 }

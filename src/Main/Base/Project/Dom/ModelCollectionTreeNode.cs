@@ -104,6 +104,36 @@ namespace ICSharpCode.SharpDevelop.Dom
 			Children.Clear();
 			LazyLoading = true;
 		}
+		
+		public virtual SharpTreeNode FindChildNodeRecursively(Func<SharpTreeNode, bool> predicate)
+		{
+			if (predicate == null)
+				return null;
+			
+			SharpTreeNode foundNode = null;
+			foreach (var child in Children) {
+				if (predicate(child)) {
+					// This is our node!
+					foundNode = child;
+					break;
+				}
+				
+				// Search in all children of this node
+				var modelNode = child as ModelCollectionTreeNode;
+				if (modelNode != null && modelNode.CanFindChildNodeRecursively) {
+					child.EnsureLazyChildren();
+					foundNode = modelNode.FindChildNodeRecursively(predicate);
+					if (foundNode != null)
+						break;
+				}
+			}
+			
+			return foundNode;
+		}
+		
+		public virtual bool CanFindChildNodeRecursively {
+			get { return true; }
+		}
 		#endregion
 	}
 	

@@ -10,13 +10,34 @@ namespace ICSharpCode.SharpDevelop.Dom.ClassBrowser
 {
 	public class ProjectTreeNode : ModelCollectionTreeNode
 	{
+		class ProjectChildComparer : IComparer<SharpTreeNode>
+		{
+			IComparer<string> stringComparer = StringComparer.OrdinalIgnoreCase;
+			
+			public int Compare(SharpTreeNode x, SharpTreeNode y)
+			{
+				// "References" node has precedence over other nodes
+				if ((x is AssemblyReferencesTreeNode) && !(y is AssemblyReferencesTreeNode))
+					return -1;
+				if (!(x is AssemblyReferencesTreeNode) && (y is AssemblyReferencesTreeNode))
+					return 1;
+				
+				// All other nodes are compared by their Text property
+				return stringComparer.Compare(x.Text.ToString(), y.Text.ToString());
+			}
+		}
+		
+		protected static readonly IComparer<SharpTreeNode> ChildNodeComparer = new ProjectChildComparer();
+		
 		IProject project;
+		IAssemblyReferencesModel assemblyReferencesModel;
 		
 		public ProjectTreeNode(IProject project)
 		{
 			if (project == null)
 				throw new ArgumentNullException("project");
 			this.project = project;
+			assemblyReferencesModel = project.AssemblyModel.References;
 		}
 		
 		protected override object GetModel()
@@ -38,7 +59,7 @@ namespace ICSharpCode.SharpDevelop.Dom.ClassBrowser
 		
 		protected override IComparer<SharpTreeNode> NodeComparer {
 			get {
-				return NodeTextComparer;
+				return ChildNodeComparer;
 			}
 		}
 		
@@ -46,6 +67,18 @@ namespace ICSharpCode.SharpDevelop.Dom.ClassBrowser
 			get {
 				return project.AssemblyModel.Namespaces;
 			}
+		}
+		
+		protected override bool IsSpecialNode()
+		{
+			return true;
+		}
+		
+		protected override void InsertSpecialNodes()
+		{
+			var treeNode = SD.TreeNodeFactory.CreateTreeNode(assemblyReferencesModel);
+			if (treeNode != null)
+				Children.OrderedInsert(treeNode, ChildNodeComparer);
 		}
 	}
 }

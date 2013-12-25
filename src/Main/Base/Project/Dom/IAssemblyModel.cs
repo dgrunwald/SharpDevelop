@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ICSharpCode.Core;
 using ICSharpCode.NRefactory.TypeSystem;
+using ICSharpCode.SharpDevelop.Parser;
 
 namespace ICSharpCode.SharpDevelop.Dom
 {
@@ -18,6 +19,11 @@ namespace ICSharpCode.SharpDevelop.Dom
 		/// Gets the assembly name (short name).
 		/// </summary>
 		string AssemblyName { get; }
+		
+		/// <summary>
+		/// Gets the full assembly name (including public key token etc.)
+		/// </summary>
+		string FullAssemblyName { get; }
 		
 		/// <summary>
 		/// Gets a collection of all top-level type definitions.
@@ -53,6 +59,11 @@ namespace ICSharpCode.SharpDevelop.Dom
 		/// Returns the location of the assembly represented by this model.
 		/// </summary>
 		FileName Location { get; }
+		
+		/// <summary>
+		/// Returns the assembly references.
+		/// </summary>
+		IAssemblyReferencesModel References { get; }
 	}
 	
 	/// <summary>
@@ -75,15 +86,26 @@ namespace ICSharpCode.SharpDevelop.Dom
 		void Update(IList<IUnresolvedTypeDefinition> oldFile, IList<IUnresolvedTypeDefinition> newFile);
 		
 		/// <summary>
+		/// Updates references of this assembly.
+		/// </summary>
+		/// <param name="references">Names of referenced assemblies</param>
+		void UpdateReferences(IReadOnlyList<DomAssemblyName> references);
+		
+		/// <summary>
 		/// Gets the assembly name (short name).
 		/// </summary>
 		new string AssemblyName { get; set; }
+		
+		/// <summary>
+		/// Gets the full assembly name (including public key token etc.)
+		/// </summary>
+		new string FullAssemblyName { get; set; }
 	}
 	
 	public sealed class EmptyAssemblyModel : IAssemblyModel
 	{
 		public readonly static IAssemblyModel Instance = new EmptyAssemblyModel();
-		
+
 		EmptyAssemblyModel()
 		{
 		}
@@ -91,7 +113,11 @@ namespace ICSharpCode.SharpDevelop.Dom
 		public string AssemblyName {
 			get { return string.Empty; }
 		}
-
+		
+		public string FullAssemblyName {
+			get { return string.Empty; }
+		}
+		
 		public ITypeDefinitionModelCollection TopLevelTypeDefinitions {
 			get { return EmptyTypeDefinitionModelCollection.Instance; }
 		}
@@ -103,7 +129,7 @@ namespace ICSharpCode.SharpDevelop.Dom
 		public INamespaceModel RootNamespace {
 			get { return EmptyNamespaceModel.Instance; }
 		}
-		
+
 		public IEntityModelContext Context {
 			get {
 				return null;
@@ -114,6 +140,10 @@ namespace ICSharpCode.SharpDevelop.Dom
 			get {
 				return null;
 			}
+		}
+		
+		public IAssemblyReferencesModel References {
+			get { return EmptyAssemblyReferencesModel.Instance; }
 		}
 	}
 }

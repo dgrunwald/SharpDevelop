@@ -19,6 +19,7 @@ namespace ICSharpCode.SharpDevelop.Dom
 		TopLevelTypeDefinitionModelCollection typeDeclarations;
 		KeyedModelCollection<string, NamespaceModel> namespaces;
 		NamespaceModel rootNamespace;
+		AssemblyReferencesModel referencesModel;
 		
 		public AssemblyModel(IEntityModelContext context)
 		{
@@ -29,9 +30,11 @@ namespace ICSharpCode.SharpDevelop.Dom
 			this.typeDeclarations = new TopLevelTypeDefinitionModelCollection(context);
 			this.typeDeclarations.CollectionChanged += TypeDeclarationsCollectionChanged;
 			this.namespaces = new KeyedModelCollection<string, NamespaceModel>(value => value.FullName);
+			this.referencesModel = new AssemblyReferencesModel(this);
 		}
 		
 		public string AssemblyName { get; set; }
+		public string FullAssemblyName { get; set; }
 		
 		public ITypeDefinitionModelCollection TopLevelTypeDefinitions {
 			get {
@@ -42,6 +45,12 @@ namespace ICSharpCode.SharpDevelop.Dom
 		public IModelCollection<INamespaceModel> Namespaces {
 			get {
 				return namespaces;
+			}
+		}
+		
+		public IAssemblyReferencesModel ReferencesModel {
+			get {
+				return referencesModel;
 			}
 		}
 		
@@ -81,6 +90,11 @@ namespace ICSharpCode.SharpDevelop.Dom
 		public void Update(IList<IUnresolvedTypeDefinition> oldFile, IList<IUnresolvedTypeDefinition> newFile)
 		{
 			typeDeclarations.Update(oldFile, newFile);
+		}
+		
+		public void UpdateReferences(IReadOnlyList<DomAssemblyName> references)
+		{
+			referencesModel.Update(references);
 		}
 		
 		void TypeDeclarationsCollectionChanged(IReadOnlyCollection<ITypeDefinitionModel> removedItems, IReadOnlyCollection<ITypeDefinitionModel> addedItems)
@@ -138,6 +152,10 @@ namespace ICSharpCode.SharpDevelop.Dom
 				foreach (IDisposable d in batchList)
 					d.Dispose();
 			}
+		}
+		
+		public IAssemblyReferencesModel References {
+			get { return referencesModel; }
 		}
 	}	
 }

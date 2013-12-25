@@ -41,6 +41,11 @@ namespace ICSharpCode.SharpDevelop.Dom
 		string AssemblyName { get; }
 		
 		/// <summary>
+		/// Gets the full assembly name (including public key token etc.)
+		/// </summary>
+		string FullAssemblyName { get; }
+		
+		/// <summary>
 		/// Full path and file name of the assembly. Output assembly for projects.
 		/// </summary>
 		string Location { get; }
@@ -68,6 +73,17 @@ namespace ICSharpCode.SharpDevelop.Dom
 			get { return project.AssemblyName; }
 		}
 		
+		public string FullAssemblyName {
+			get {
+				if (project.ProjectContent != null) {
+					return project.ProjectContent.FullAssemblyName;
+				}
+				
+				// TODO Better fallback for the case we can't get a FullAssemblyName?
+				return project.AssemblyName;
+			}
+		}
+		
 		public string Location {
 			get { return project.OutputAssemblyFullPath; }
 		}
@@ -91,24 +107,48 @@ namespace ICSharpCode.SharpDevelop.Dom
 		}
 	}
 	
+	public class DomAssemblyNameReference : IAssemblyReference
+	{
+		DomAssemblyName name;
+		IAssemblySearcher searcher;
+		
+		public DomAssemblyNameReference(DomAssemblyName name, IAssemblySearcher searcher)
+		{
+			if (name == null)
+				throw new ArgumentNullException("name");
+			if (searcher == null)
+				throw new ArgumentNullException("searcher");
+			this.name = name;
+			this.searcher = searcher;
+		}
+		
+		public IAssembly Resolve(ITypeResolveContext context)
+		{
+			return SD.AssemblyParserService.GetAssembly(searcher.FindAssembly(name), true).Resolve(context);
+		}
+	}
+	
 	public class AssemblyEntityModelContext : IEntityModelContext
 	{
-		ICompilation compilation;
+		Lazy<ICompilation> compilation;
 		IUnresolvedAssembly mainAssembly;
 		IAssemblyReference[] references;
 		
-		public AssemblyEntityModelContext(IUnresolvedAssembly mainAssembly, params IAssemblyReference[] references)
+		public AssemblyEntityModelContext(IUnresolvedAssembly mainAssembly, IAssemblyReference[] references)
 		{
 			if (mainAssembly == null)
 				throw new ArgumentNullException("mainAssembly");
 			this.mainAssembly = mainAssembly;
 			this.references = references;
-			// implement lazy init + weak caching
-			this.compilation = new SimpleCompilation(mainAssembly, references);
+			this.compilation = new Lazy<ICompilation>(() => new SimpleCompilation(mainAssembly, references));
 		}
 		
 		public string AssemblyName {
 			get { return mainAssembly.AssemblyName; }
+		}
+		
+		public string FullAssemblyName {
+			get { return mainAssembly.FullAssemblyName; }
 		}
 		
 		public string Location {
@@ -117,7 +157,7 @@ namespace ICSharpCode.SharpDevelop.Dom
 		
 		public ICompilation GetCompilation()
 		{
-			return compilation;
+			return compilation.Value;
 		}
 		
 		public bool IsBetterPart(IUnresolvedTypeDefinition part1, IUnresolvedTypeDefinition part2)

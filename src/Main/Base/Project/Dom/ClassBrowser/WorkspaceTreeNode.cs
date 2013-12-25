@@ -36,16 +36,11 @@ namespace ICSharpCode.SharpDevelop.Dom.ClassBrowser
 		}
 		
 		WorkspaceModel workspace;
-		protected static readonly IComparer<SharpTreeNode> ChildNodeComparer = new WorkspaceChildComparer();
-		
-		public IMutableModelCollection<IAssemblyList> AssemblyLists {
-			get { return workspace.AssemblyLists; }
+		public WorkspaceModel Workspace {
+			get { return workspace; }
 		}
 
-		public IAssemblyList AssemblyList {
-			get { return workspace.MainAssemblyList; }
-			set { workspace.MainAssemblyList = value; }
-		}
+		protected static readonly IComparer<SharpTreeNode> ChildNodeComparer = new WorkspaceChildComparer();
 		
 		public WorkspaceTreeNode()
 		{
@@ -59,7 +54,7 @@ namespace ICSharpCode.SharpDevelop.Dom.ClassBrowser
 		}
 		
 		protected override IModelCollection<object> ModelChildren {
-			get { return workspace.MainAssemblyList.Assemblies; }
+			get { return workspace.MainAssemblyList.Assemblies.Concat(workspace.UnpinnedAssemblies.Assemblies); }
 		}
 		
 		protected override IComparer<SharpTreeNode> NodeComparer {
@@ -68,7 +63,7 @@ namespace ICSharpCode.SharpDevelop.Dom.ClassBrowser
 		
 		public override object Text {
 			get {
-				return String.Format(SD.ResourceService.GetString("MainWindow.Windows.ClassBrowser.Workspace"), AssemblyList.Name);
+				return String.Format(SD.ResourceService.GetString("MainWindow.Windows.ClassBrowser.Workspace"), Workspace.MainAssemblyList.Name);
 			}
 		}
 		

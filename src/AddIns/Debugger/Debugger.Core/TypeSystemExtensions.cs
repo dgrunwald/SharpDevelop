@@ -138,8 +138,11 @@ namespace Debugger
 		internal static Task<IUnresolvedAssembly> LoadModuleAsync(Module module, ICorDebugModule corModule)
 		{
 			string name = corModule.GetName();
-			if (corModule.IsDynamic() == 1 || corModule.IsInMemory() == 1)
-				return Task.FromResult<IUnresolvedAssembly>(new DefaultUnresolvedAssembly(name));
+			if (corModule.IsDynamic() == 1 || corModule.IsInMemory() == 1) {
+				var defaultUnresolvedAssembly = new DefaultUnresolvedAssembly(name);
+				weakTable.Add(defaultUnresolvedAssembly, new ModuleMetadataInfo(module, null));
+				return Task.FromResult<IUnresolvedAssembly>(defaultUnresolvedAssembly);
+			}
 			
 			//return Task.FromResult(LoadModule(module, name));
 			return Task.Run(() => LoadModule(module, name));
@@ -174,6 +177,16 @@ namespace Debugger
 		public static Module GetModule(this IAssembly assembly)
 		{
 			return GetInfo(assembly).Module;
+		}
+		
+		public static IEnumerable<string> GetReferences(this Module module)
+		{
+			ModuleMetadataInfo info;
+			if (!weakTable.TryGetValue(module.UnresolvedAssembly, out info))
+				throw new ArgumentException("The assembly was not from the debugger type system");
+			if (info.CecilModule == null)
+				return EmptyList<string>.Instance;
+			return info.CecilModule.AssemblyReferences.Select(r => r.FullName);
 		}
 		
 		public static uint GetMetadataToken(this ITypeDefinition typeDefinition)

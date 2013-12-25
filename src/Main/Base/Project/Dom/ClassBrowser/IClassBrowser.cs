@@ -3,18 +3,18 @@
 
 using System;
 using System.Collections.Generic;
-using ICSharpCode.TreeView;
+using ICSharpCode.Core;
+using ICSharpCode.NRefactory.TypeSystem;
 
 namespace ICSharpCode.SharpDevelop.Dom.ClassBrowser
 {
 	public interface IClassBrowser
 	{
 		IAssemblyList MainAssemblyList { get; set; }
+		IAssemblyList UnpinnedAssemblies { get; set; }
 		ICollection<IAssemblyList> AssemblyLists { get; }
-		
-		/*
-		  	IAssemblyList MainAssemblyList { get; set; }
-			ICollection<IAssemblyList> AssemblyLists { get; }
-		 */
+		IAssemblyModel FindAssemblyModel(FileName fileName);
+		bool GoToEntity(IEntity entity);
+		bool GotoAssemblyModel(IAssemblyModel assemblyModel);
 	}
 }

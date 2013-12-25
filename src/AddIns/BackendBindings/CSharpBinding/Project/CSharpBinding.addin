@@ -16,7 +16,8 @@
 			<Doozer name="CSharpCodeActionProvider" class="CSharpBinding.Refactoring.CSharpCodeActionProviderDoozer"/>
 		</Import>
 		<Import assembly = ":ICSharpCode.SharpDevelop"/>
-		<Import assembly = ":ICSharpCode.NRefactory.CSharp.Refactoring"/>
+		<Import assembly = ":ICSharpCode.NRefactory.CSharp"/> <!-- used for CSharpAmbience -->
+		<Import assembly = ":ICSharpCode.NRefactory.CSharp.Refactoring"/> <!-- used for issues and refactorings -->
 	</Runtime>
 	
 	<Path name = "/SharpDevelop/Workbench/Ambiences">
@@ -54,7 +55,7 @@
 	
 	<Path name = "/SharpDevelop/Parser">
 		<Parser id    = "C#"
-		        supportedextensions  = ".cs"
+		        supportedfilenamepattern = "\.(cs)$"
 		        projectfileextension = ".csproj"
 		        class = "CSharpBinding.Parser.TParser"/>
 	</Path>

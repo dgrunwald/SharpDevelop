@@ -3,6 +3,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using ICSharpCode.Core;
 using ICSharpCode.TreeView;
 
 namespace ICSharpCode.SharpDevelop.Dom.ClassBrowser
@@ -18,10 +21,11 @@ namespace ICSharpCode.SharpDevelop.Dom.ClassBrowser
 		}
 		
 		IAssemblyList mainAssemblyList;
+		IAssemblyList unpinnedAssemblies;
 
 		public event System.ComponentModel.PropertyChangedEventHandler PropertyChanged;
 
-		protected virtual void OnPropertyChanged(string propertyName)
+		protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = "")
 		{
 			if (PropertyChanged != null) {
 				PropertyChanged(this, new System.ComponentModel.PropertyChangedEventArgs(propertyName));
@@ -35,14 +39,41 @@ namespace ICSharpCode.SharpDevelop.Dom.ClassBrowser
 			set {
 				if (mainAssemblyList != value) {
 					mainAssemblyList = value;
-					OnPropertyChanged("AssemblyList");
+					OnPropertyChanged();
 				}
 			}
 		}
+		
+		public IAssemblyList UnpinnedAssemblies {
+			get {
+				return unpinnedAssemblies;
+			}
+			set {
+				if (unpinnedAssemblies != value) {
+					unpinnedAssemblies = value;
+					OnPropertyChanged();
+				}
+			}
+		}
+		
+		public IAssemblyModel FindAssemblyModel(FileName fileName)
+		{
+			foreach (var list in assemblyLists) {
+				var model = list.Assemblies.FirstOrDefault(m => m.Location == fileName);
+				if (model != null)
+					return model;
+			}
+			var modelInMainAssemblyList = mainAssemblyList.Assemblies.FirstOrDefault(m => m.Location == fileName);
+			if (modelInMainAssemblyList != null)
+				return modelInMainAssemblyList;
+			return unpinnedAssemblies.Assemblies.FirstOrDefault(m => m.Location == fileName);
+		}
+		
 		public WorkspaceModel()
 		{
 			this.assemblyLists = new SimpleModelCollection<IAssemblyList>();
 			this.MainAssemblyList = new AssemblyList();
+			this.UnpinnedAssemblies = new AssemblyList();
 		}
 	}
 }

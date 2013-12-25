@@ -327,7 +327,7 @@ namespace ICSharpCode.SharpDevelop.Project
 		
 		#region Type System
 		volatile ProjectContentContainer projectContentContainer;
-		IAssemblyModel assemblyModel;
+		IUpdateableAssemblyModel assemblyModel;
 		
 		protected void InitializeProjectContent(IProjectContent initialProjectContent)
 		{
@@ -356,14 +356,6 @@ namespace ICSharpCode.SharpDevelop.Project
 				SD.MainThread.VerifyAccess();
 				if (assemblyModel == null) {
 					assemblyModel = SD.GetRequiredService<IModelFactory>().CreateAssemblyModel(new ProjectEntityModelContext(this, ".cs"));
-					var pc = ProjectContent;
-					if (pc != null && assemblyModel is IUpdateableAssemblyModel) {
-						((IUpdateableAssemblyModel)assemblyModel).AssemblyName = AssemblyName;
-						// Add the already loaded files into the model
-						foreach (var file in pc.Files) {
-							((IUpdateableAssemblyModel)assemblyModel).Update(null, file);
-						}
-					}
 				}
 				return assemblyModel;
 			}
@@ -376,12 +368,7 @@ namespace ICSharpCode.SharpDevelop.Project
 				c.ParseInformationUpdated(args.OldUnresolvedFile, args.NewUnresolvedFile);
 			// OnParseInformationUpdated is called inside a lock, but we don't want to raise the event inside that lock.
 			// To ensure events are raised in the same order, we always invoke on the main thread.
-			SD.MainThread.InvokeAsyncAndForget(delegate {
-				if (assemblyModel is IUpdateableAssemblyModel) {
-					((IUpdateableAssemblyModel)assemblyModel).Update(args.OldUnresolvedFile, args.NewUnresolvedFile);
-				}
-				ParseInformationUpdated(null, args);
-			});
+			SD.MainThread.InvokeAsyncAndForget(delegate { ParseInformationUpdated(null, args); });
 		}
 		
 		public override event EventHandler<ParseInformationEventArgs> ParseInformationUpdated = delegate {};

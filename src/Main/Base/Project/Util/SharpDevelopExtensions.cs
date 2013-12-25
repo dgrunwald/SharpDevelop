@@ -18,9 +18,7 @@ using ICSharpCode.Core.Presentation;
 using ICSharpCode.NRefactory;
 using ICSharpCode.NRefactory.Editor;
 using ICSharpCode.NRefactory.TypeSystem;
-using ICSharpCode.NRefactory.Utils;
 using ICSharpCode.SharpDevelop.Dom;
-using ICSharpCode.SharpDevelop.Editor;
 using ICSharpCode.SharpDevelop.Parser;
 using ICSharpCode.SharpDevelop.Project;
 
@@ -768,6 +766,24 @@ namespace ICSharpCode.SharpDevelop
 			return index;
 		}
 		
+		public static bool ContainsAny(this string haystack, IEnumerable<string> needles, int startIndex, out string match)
+		{
+			if (haystack == null)
+				throw new ArgumentNullException("haystack");
+			if (needles == null)
+				throw new ArgumentNullException("needles");
+			int index = -1;
+			match = null;
+			foreach (var needle in needles) {
+				int i = haystack.IndexOf(needle, startIndex, StringComparison.Ordinal);
+				if (i != -1 && (index == -1 || index > i)) {
+					index = i;
+					match = needle;
+				}
+			}
+			return index > -1;
+		}
+		
 		/// <summary>
 		/// Retrieves a hash code for the specified string that is stable across
 		/// multiple runs of SharpDevelop and .NET upgrades.
@@ -825,6 +841,17 @@ namespace ICSharpCode.SharpDevelop
 			if (service == null)
 				throw new ServiceNotFoundException(serviceType);
 			return service;
+		}
+		#endregion
+		
+		#region Service Extensions
+		public static ICompilation GetCompilationForCurrentProject(this IParserService svc)
+		{
+			if (svc == null)
+				throw new ArgumentNullException("svc");
+			IProject project = SD.ProjectService.CurrentProject;
+			if (project == null) return null;
+			return SD.ParserService.GetCompilation(project);
 		}
 		#endregion
 		
