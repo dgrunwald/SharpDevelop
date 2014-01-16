@@ -30,7 +30,7 @@ namespace ICSharpCode.SharpDevelop.Project
 		/// </summary>
 		/// <param name="project">The project/solution to build</param>
 		/// <param name="options">The build options that should be used</param>
-		/// <param name="realtimeBuildFeedbackSink">The build feedback sink that receives the build output.
+		/// <param name="buildFeedbackSink">The build feedback sink that receives the build output.
 		/// The output is nearly sent "as it comes in": sometimes output must wait because the BuildEngine
 		/// will ensure that output from two projects building in parallel isn't interleaved.</param>
 		/// <param name="progressMonitor">The progress monitor that receives build progress. The monitor will be disposed
@@ -38,7 +38,7 @@ namespace ICSharpCode.SharpDevelop.Project
 		public static Task<BuildResults> BuildAsync(IBuildable project, BuildOptions options, IBuildFeedbackSink buildFeedbackSink, IProgressMonitor progressMonitor)
 		{
 			if (project == null)
-				throw new ArgumentNullException("solution");
+				throw new ArgumentNullException("project");
 			if (options == null)
 				throw new ArgumentNullException("options");
 			
@@ -158,6 +158,7 @@ namespace ICSharpCode.SharpDevelop.Project
 			
 			public void ReportError(BuildError error)
 			{
+				TransformBuildError(error);
 				if (error.IsWarning) {
 					if (perNodeProgressMonitor.Status != OperationStatus.Error)
 						perNodeProgressMonitor.Status = OperationStatus.Warning;
@@ -165,6 +166,27 @@ namespace ICSharpCode.SharpDevelop.Project
 					perNodeProgressMonitor.Status = OperationStatus.Error;
 				}
 				engine.ReportError(this, error);
+			}
+
+			void TransformBuildError(BuildError error)
+			{
+				if (error.IsWarning) {
+					// treat "MSB3274: The primary reference "{0}" could not be resolved because it was 
+					// built against the "{1}" framework. This is a higher version than the currently 
+					// targeted framework "{2}"." as error.
+					if ("MSB3274".Equals(error.ErrorCode, StringComparison.OrdinalIgnoreCase)) {
+						error.IsWarning = false;
+						return;
+					}
+					// treat "MSB3275: The primary reference "{0}" could not be resolved because it has
+					// an indirect dependency on the assembly "{1}" which was built against the "{2}"
+					// framework. This is a higher version than the currently targeted framework "{3}"."
+					// as error.
+					if ("MSB3275".Equals(error.ErrorCode, StringComparison.OrdinalIgnoreCase)) {
+						error.IsWarning = false;
+						return;
+					}
+				}
 			}
 			
 			public void ReportMessage(RichText message)

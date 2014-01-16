@@ -2,8 +2,10 @@
 // This code is distributed under the GNU LGPL (for details please see \doc\license.txt)
 
 using System;
+using System.Windows.Controls;
 using ICSharpCode.NRefactory.TypeSystem;
 using ICSharpCode.SharpDevelop;
+using ICSharpCode.SharpDevelop.Editor;
 
 namespace CSharpBinding.Completion
 {
@@ -22,6 +24,14 @@ namespace CSharpBinding.Completion
 			if (typeDef != null)
 				this.Description = typeDef.Documentation;
 			this.Image = ClassBrowserIconService.GetIcon(type);
+		}
+		
+		protected override object CreateFancyDescription()
+		{
+			return new FlowDocumentScrollViewer {
+				Document = XmlDocFormatter.CreateTooltip(type, false),
+				VerticalScrollBarVisibility = ScrollBarVisibility.Auto
+			};
 		}
 	}
 }

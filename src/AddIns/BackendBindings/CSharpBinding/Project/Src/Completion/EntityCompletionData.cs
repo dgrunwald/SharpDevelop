@@ -3,9 +3,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.Windows.Controls;
 using ICSharpCode.NRefactory.Completion;
 using ICSharpCode.NRefactory.TypeSystem;
 using ICSharpCode.SharpDevelop;
+using ICSharpCode.SharpDevelop.Editor;
 
 namespace CSharpBinding.Completion
 {
@@ -22,6 +24,14 @@ namespace CSharpBinding.Completion
 			this.entity = entity;
 			this.Description = entity.Documentation;
 			this.Image = ClassBrowserIconService.GetIcon(entity);
+		}
+		
+		protected override object CreateFancyDescription()
+		{
+			return new FlowDocumentScrollViewer {
+				Document = XmlDocFormatter.CreateTooltip(entity, false),
+				VerticalScrollBarVisibility = ScrollBarVisibility.Auto
+			};
 		}
 	}
 }

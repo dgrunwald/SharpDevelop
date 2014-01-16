@@ -16,7 +16,7 @@ namespace ICSharpCode.SharpDevelop.Project
 	class SolutionFolder : ISolutionFolder
 	{
 		readonly Solution parentSolution;
-		readonly Guid idGuid;
+		Guid idGuid;
 		
 		public SolutionFolder(Solution parentSolution, Guid idGuid)
 		{
@@ -114,6 +114,7 @@ namespace ICSharpCode.SharpDevelop.Project
 		
 		public Guid IdGuid {
 			get { return idGuid; }
+			set { idGuid = value; }
 		}
 		
 		public Guid TypeGuid {
@@ -131,13 +132,14 @@ namespace ICSharpCode.SharpDevelop.Project
 		
 		public IProject AddExistingProject(FileName fileName)
 		{
+			if (parentSolution.Projects.Any(p => p.FileName == fileName))
+				throw new ProjectLoadException("Project " + fileName + " is already part of this solution.");
 			ProjectLoadInformation loadInfo = new ProjectLoadInformation(parentSolution, fileName, fileName.GetFileNameWithoutExtension());
-			var descriptor = ProjectBindingService.GetCodonPerProjectFile(fileName);
-			if (descriptor != null) {
-				loadInfo.TypeGuid = descriptor.Guid;
+			IProject project = SD.ProjectService.LoadProject(loadInfo);
+			if (parentSolution.GetItemByGuid(project.IdGuid) != null) {
+				SD.Log.Warn("Added project has duplicate GUID; a new GUID will be generated.");
+				project.IdGuid = Guid.NewGuid();
 			}
-			IProject project = ProjectBindingService.LoadProject(loadInfo);
-			Debug.Assert(project.IdGuid != Guid.Empty);
 			this.Items.Add(project);
 			project.ProjectLoaded();
 			ProjectBrowserPad.RefreshViewAsync();
