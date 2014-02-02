@@ -1,5 +1,20 @@
-﻿// Copyright (c) AlphaSierraPapa for the SharpDevelop Team (for details please see \doc\copyright.txt)
-// This code is distributed under the GNU LGPL (for details please see \doc\license.txt)
+﻿// Copyright (c) 2014 AlphaSierraPapa for the SharpDevelop Team
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this
+// software and associated documentation files (the "Software"), to deal in the Software
+// without restriction, including without limitation the rights to use, copy, modify, merge,
+// publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons
+// to whom the Software is furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in all copies or
+// substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+// INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+// PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+// FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
 
 using System;
 using System.Collections.Generic;
@@ -23,6 +38,7 @@ using ICSharpCode.NRefactory.Utils;
 using ICSharpCode.SharpDevelop;
 using ICSharpCode.SharpDevelop.Debugging;
 using ICSharpCode.SharpDevelop.Editor;
+using ICSharpCode.SharpDevelop.Editor.Bookmarks;
 using ICSharpCode.SharpDevelop.Gui;
 using Microsoft.Win32;
 
@@ -351,6 +367,21 @@ namespace ICSharpCode.AvalonEdit.AddIn.Options
 			bracketHighlight.PropertyChanged += item_PropertyChanged;
 			items.Add(bracketHighlight);
 			
+			// Create entry for "Current Line highlight"
+			IHighlightingItem currentLineHighlight = new SimpleHighlightingItem(
+				CustomizingHighlighter.CurrentLineHighlighter,
+				ta => {
+					ta.Document.Text = "example text line";
+					ta.TextView.Options.HighlightCurrentLine = true;
+				})
+			{
+				Foreground = Color.FromArgb(52, 0, 255, 110),
+				Background = Color.FromArgb(22, 20, 220, 224)
+			};
+			currentLineHighlight = new CustomizedHighlightingItem(customizationList, currentLineHighlight, language, canSetFont: false);
+			currentLineHighlight.PropertyChanged += item_PropertyChanged;
+			items.Add(currentLineHighlight);
+			
 			// Create entry for "Folding controls"
 			IHighlightingItem foldingControls = new SimpleHighlightingItem(
 				FoldingControls,
@@ -466,7 +497,7 @@ namespace ICSharpCode.AvalonEdit.AddIn.Options
 			items.Add(messageMarker);
 			
 			IHighlightingItem breakpointMarker = new SimpleHighlightingItem(
-				BreakpointBookmark.BreakpointMarker,
+				BookmarkBase.BreakpointMarkerName,
 				ta => {
 					ta.Document.Text = "some code with a breakpoint";
 					ITextMarker marker = textMarkerService.Create(0, ta.Document.TextLength);
@@ -476,15 +507,15 @@ namespace ICSharpCode.AvalonEdit.AddIn.Options
 					};
 				})
 			{
-				Background = BreakpointBookmark.DefaultBackground,
-				Foreground = BreakpointBookmark.DefaultForeground
+				Background = BookmarkBase.BreakpointDefaultBackground,
+				Foreground = BookmarkBase.BreakpointDefaultForeground
 			};
 			breakpointMarker = new CustomizedHighlightingItem(customizationList, breakpointMarker, language, canSetFont: false);
 			breakpointMarker.PropertyChanged += item_PropertyChanged;
 			items.Add(breakpointMarker);
 			
 			IHighlightingItem currentStatementMarker = new SimpleHighlightingItem(
-				CurrentLineBookmark.Name,
+				BookmarkBase.CurrentLineBookmarkName,
 				ta => {
 					ta.Document.Text = "current statement line";
 					ITextMarker marker = textMarkerService.Create(0, ta.Document.TextLength);
@@ -494,8 +525,8 @@ namespace ICSharpCode.AvalonEdit.AddIn.Options
 					};
 				})
 			{
-				Background = CurrentLineBookmark.DefaultBackground,
-				Foreground = CurrentLineBookmark.DefaultForeground
+				Background = BookmarkBase.CurrentLineDefaultBackground,
+				Foreground = BookmarkBase.CurrentLineDefaultForeground
 			};
 			currentStatementMarker = new CustomizedHighlightingItem(customizationList, currentStatementMarker, language, canSetFont: false);
 			currentStatementMarker.PropertyChanged += item_PropertyChanged;

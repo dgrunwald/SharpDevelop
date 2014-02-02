@@ -1,5 +1,20 @@
-﻿// Copyright (c) AlphaSierraPapa for the SharpDevelop Team (for details please see \doc\copyright.txt)
-// This code is distributed under the GNU LGPL (for details please see \doc\license.txt)
+﻿// Copyright (c) 2014 AlphaSierraPapa for the SharpDevelop Team
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this
+// software and associated documentation files (the "Software"), to deal in the Software
+// without restriction, including without limitation the rights to use, copy, modify, merge,
+// publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons
+// to whom the Software is furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in all copies or
+// substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+// INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+// PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+// FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
 
 using System;
 using System.Collections.Generic;
@@ -43,18 +58,8 @@ namespace ICSharpCode.WpfDesign.AddIn
 			
 			BasicMetadata.Register();
 			
-			WpfToolbox.Instance.AddProjectDlls(file);
-
-			ProjectService.ProjectItemAdded += ProjectService_ProjectItemAdded;
-			
 			this.TabPageText = "${res:FormsDesigner.DesignTabPages.DesignTabPage}";
 			this.IsActiveViewContentChanged += OnIsActiveViewContentChanged;
-		}
-
-		void ProjectService_ProjectItemAdded(object sender, ProjectItemEventArgs e)
-		{
-			if (e.ProjectItem is ReferenceProjectItem)
-				WpfToolbox.Instance.AddProjectDlls(this.Files[0]);
 		}
 		
 		static WpfViewContent()
@@ -89,6 +94,7 @@ namespace ICSharpCode.WpfDesign.AddIn
 				designer = new DesignSurface();
 				this.UserContent = designer;
 				InitPropertyEditor();
+				InitWpfToolbox();
 			}
 			this.UserContent = designer;
 			if (outline != null) {
@@ -187,6 +193,19 @@ namespace ICSharpCode.WpfDesign.AddIn
 			propertyContainer.PropertyGridReplacementContent = propertyGridView;
 			propertyGridView.PropertyGrid.PropertyChanged += OnPropertyGridPropertyChanged;
 		}
+
+		void InitWpfToolbox()
+		{
+			WpfToolbox.Instance.AddProjectDlls(Files[0]);
+			SD.ProjectService.ProjectItemAdded += OnReferenceAdded;
+		}
+		
+		void OnReferenceAdded(object sender, ProjectItemEventArgs e)
+		{
+			if (!(e.ProjectItem is ReferenceProjectItem)) return;
+			if (e.Project != SD.ProjectService.FindProjectContainingFile(Files[0].FileName)) return;
+			WpfToolbox.Instance.AddProjectDlls(Files[0]);
+		}
 		
 		void OnSelectionChanged(object sender, DesignItemCollectionEventArgs e)
 		{
@@ -217,7 +236,10 @@ namespace ICSharpCode.WpfDesign.AddIn
 				ISymbol controlSymbol = designerClass.GetFields(f => f.Name == propertyGridView.PropertyGrid.OldName, GetMemberOptions.IgnoreInheritedMembers)
 					.SingleOrDefault();
 				if (controlSymbol != null) {
-					FindReferenceService.RenameSymbol(controlSymbol, propertyGridView.PropertyGrid.Name, new DummyProgressMonitor())
+					AsynchronousWaitDialog.ShowWaitDialogForAsyncOperation(
+						"${res:SharpDevelop.Refactoring.Rename}",
+						progressMonitor =>
+						FindReferenceService.RenameSymbol(controlSymbol, propertyGridView.PropertyGrid.Name, progressMonitor)
 						.ObserveOnUIThread()
 						.Subscribe(error => SD.MessageService.ShowError(error.Message), // onNext
 						           ex => SD.MessageService.ShowException(ex), // onError
@@ -227,7 +249,8 @@ namespace ICSharpCode.WpfDesign.AddIn
 						           		SD.ParserService.ParseAsync(fileName).FireAndForget();
 						           	}
 						           }
-						          );
+						          )
+					);
 
 				}
 			}
@@ -260,7 +283,7 @@ namespace ICSharpCode.WpfDesign.AddIn
 		
 		public override void Dispose()
 		{
-			ProjectService.ProjectItemAdded -= ProjectService_ProjectItemAdded;
+			SD.ProjectService.ProjectItemAdded -= OnReferenceAdded;
 
 			propertyContainer.Clear();
 			base.Dispose();

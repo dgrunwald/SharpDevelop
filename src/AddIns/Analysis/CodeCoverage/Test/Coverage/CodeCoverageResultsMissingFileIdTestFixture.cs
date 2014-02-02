@@ -1,5 +1,20 @@
-﻿// Copyright (c) AlphaSierraPapa for the SharpDevelop Team (for details please see \doc\copyright.txt)
-// This code is distributed under the GNU LGPL (for details please see \doc\license.txt)
+﻿// Copyright (c) 2014 AlphaSierraPapa for the SharpDevelop Team
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this
+// software and associated documentation files (the "Software"), to deal in the Software
+// without restriction, including without limitation the rights to use, copy, modify, merge,
+// publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons
+// to whom the Software is furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in all copies or
+// substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+// INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+// PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+// FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
 
 using System;
 using System.IO;
@@ -96,15 +111,28 @@ namespace ICSharpCode.CodeCoverage.Tests.Coverage
 			Assert.AreEqual(expectedName, name);
 		}
 		
-		[Test]
+		[Test, Ignore("Replaced by test below")]
 		public void SequencePointsCount_NUnitNotEqualAssertFailMethod_ReturnsAllSequencePoints()
 		{
 			int sequencePointCount = FirstModuleFirstMethod.SequencePoints.Count;
 			int expectedSequencePointCount = 3;
 			Assert.AreEqual(expectedSequencePointCount, sequencePointCount);
 		}
-		
+
+		/// <summary> No FileID => No sequence points!
+		/// SD.CodeCoverage DOES NOT RETURN SequencePoints
+		/// for assemblies without debug info,
+		/// =&gt; methods without FileID
+		/// </summary>
 		[Test]
+		public void SequencePointsCount_NUnitNotEqualAssertFailMethod_ReturnsNoSequencePoints()
+		{
+			int sequencePointCount = FirstModuleFirstMethod.SequencePoints.Count;
+			int expectedSequencePointCount = 0;
+			Assert.AreEqual(expectedSequencePointCount, sequencePointCount);
+		}
+		
+		[Test, Ignore("SequencePoint.FileID DOES NOT EXISTS in Fixture above! This must be very OLD test.")]
 		public void SequencePointsCount_MyClassConstructorHasFourSequencePointsWithOneMissingFileId_ReturnsAllSequencePoints()
 		{
 			int sequencePointCount = SecondModule.Methods[0].SequencePoints.Count;

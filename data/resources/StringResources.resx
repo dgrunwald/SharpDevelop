@@ -2422,11 +2422,14 @@ system. I don't think that it needs translation.</comment>
   <data name="Dialog.Options.IDEOptions.TextEditor.Markers.EOLMarkersCheckBox" xml:space="preserve">
     <value>Show &amp;end-of-line markers</value>
   </data>
+  <data name="Dialog.Options.IDEOptions.TextEditor.Markers.HighlightBracketCheckBox" xml:space="preserve">
+    <value>Highlight &amp;matching bracket</value>
+  </data>
+  <data name="Dialog.Options.IDEOptions.TextEditor.Markers.HighlightCurrentLineCheckBox" xml:space="preserve">
+    <value>Highlight current line</value>
+  </data>
   <data name="Dialog.Options.IDEOptions.TextEditor.Markers.HighlightSymbolCheckBox" xml:space="preserve">
     <value>Highlight symbols</value>
-  </data>
-  <data name="Dialog.Options.IDEOptions.TextEditor.Markers.HiglightBracketCheckBox" xml:space="preserve">
-    <value>Highlight &amp;matching bracket</value>
   </data>
   <data name="Dialog.Options.IDEOptions.TextEditor.Markers.HorizontalRulerCheckBox" xml:space="preserve">
     <value>Show &amp;horizontal ruler</value>
@@ -3415,9 +3418,15 @@ You can also choose to store the setting in the .user-file instead of the projec
     <value>Code Not Covered</value>
     <comment>One of the display items that exists in the Code Coverage Options Panel.  Selecting this one allows the user to configure the colours for the code that has NOT been covered by the unit tests.</comment>
   </data>
+  <data name="ICSharpCode.CodeCoverage.CodePartCovered" xml:space="preserve">
+    <value>Code Partially Covered</value>
+  </data>
   <data name="ICSharpCode.CodeCoverage.Column" xml:space="preserve">
     <value>Column</value>
     <comment>List view column header holding the code coverage start column number.</comment>
+  </data>
+  <data name="ICSharpCode.CodeCoverage.Content" xml:space="preserve">
+    <value>Content</value>
   </data>
   <data name="ICSharpCode.CodeCoverage.DisplayOptions" xml:space="preserve">
     <value>Display Options</value>
@@ -6434,6 +6443,13 @@ Removed the end part of the original message ", reason '${Message}'" since this 
     <value>Classes deriving from ${Name}</value>
     <comment>Title for search results for derived classes</comment>
   </data>
+  <data name="SharpDevelop.Refactoring.ClipboardRingCommand" xml:space="preserve">
+    <value>Paste from clipboard ring...</value>
+    <comment>'Paste previous' command in Edit &gt; Insert menu</comment>
+  </data>
+  <data name="SharpDevelop.Refactoring.ClipboardRingEmpty" xml:space="preserve">
+    <value>Clipboard ring is empty</value>
+  </data>
   <data name="SharpDevelop.Refactoring.ConvertToAutomaticProperty" xml:space="preserve">
     <value>Convert to automatic property</value>
   </data>
@@ -6928,6 +6944,14 @@ The resources files have been renamed/moved accordingly.</value>
   </data>
   <data name="StatusBarService.CursorStatusBarPanelText" xml:space="preserve">
     <value>ln ${Line} col ${Column} ch ${Character}</value>
+  </data>
+  <data name="StatusBarService.SelectionStatusBarPanelTextMulti" xml:space="preserve">
+    <value>len ${Rows} * ${Cols} (${Total})</value>
+    <comment>shown in status bar when a rectangle selection is used in the editor</comment>
+  </data>
+  <data name="StatusBarService.SelectionStatusBarPanelTextSingle" xml:space="preserve">
+    <value>len ${Length}</value>
+    <comment>Shown in status bar when some text is selected in the editor</comment>
   </data>
   <data name="Templates.File.Categories.Misc" xml:space="preserve">
     <value>Misc</value>

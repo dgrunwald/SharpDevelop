@@ -1,5 +1,20 @@
-﻿// Copyright (c) AlphaSierraPapa for the SharpDevelop Team (for details please see \doc\copyright.txt)
-// This code is distributed under the GNU LGPL (for details please see \doc\license.txt)
+﻿// Copyright (c) 2014 AlphaSierraPapa for the SharpDevelop Team
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this
+// software and associated documentation files (the "Software"), to deal in the Software
+// without restriction, including without limitation the rights to use, copy, modify, merge,
+// publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons
+// to whom the Software is furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in all copies or
+// substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+// INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+// PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+// FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
 
 using System;
 using System.Collections.Generic;
@@ -127,6 +142,7 @@ namespace ICSharpCode.SharpDevelop.Parser
 		/// which parsed version of the file to return (for example, different project settings
 		/// can cause the file to be parsed differently).
 		/// </param>
+		/// <param name="cancellationToken">Cancellation token used to abort the operation.</param>
 		/// <returns>
 		/// Returns the ParseInformation for the specified file, or null if the file cannot be parsed.
 		/// For files currently open in an editor, this method does not necessary reparse, but may return
@@ -159,6 +175,7 @@ namespace ICSharpCode.SharpDevelop.Parser
 		/// which parsed version of the file to return (for example, different project settings
 		/// can cause the file to be parsed differently).
 		/// </param>
+		/// <param name="cancellationToken">Cancellation token used to abort the operation.</param>
 		/// <returns>
 		/// Returns the IUnresolvedFile for the specified file, or null if the file cannot be parsed.
 		/// For files currently open in an editor, this method does not necessarily reparse, but may return
@@ -166,7 +183,7 @@ namespace ICSharpCode.SharpDevelop.Parser
 		/// </returns>
 		/// <remarks><inheritdoc cref="Parse"/></remarks>
 		IUnresolvedFile ParseFile(FileName fileName, ITextSource fileContent = null, IProject parentProject = null,
-		                      CancellationToken cancellationToken = default(CancellationToken));
+		                          CancellationToken cancellationToken = default(CancellationToken));
 		
 		/// <summary>
 		/// Parses the specified file on a background thread.
@@ -179,6 +196,7 @@ namespace ICSharpCode.SharpDevelop.Parser
 		/// which parsed version of the file to return (for example, different project settings
 		/// can cause the file to be parsed differently).
 		/// </param>
+		/// <param name="cancellationToken">Cancellation token used to abort the operation.</param>
 		/// <returns><inheritdoc cref="Parse"/></returns>
 		/// <remarks>
 		/// This method is thread-safe.
@@ -208,10 +226,11 @@ namespace ICSharpCode.SharpDevelop.Parser
 		/// which parsed version of the file to return (for example, different project settings
 		/// can cause the file to be parsed differently).
 		/// </param>
+		/// <param name="cancellationToken">Cancellation token used to abort the operation.</param>
 		/// <returns><inheritdoc cref="ParseFile"/></returns>
 		/// <remarks><inheritdoc cref="ParseAsync"/></remarks>
 		Task<IUnresolvedFile> ParseFileAsync(FileName fileName, ITextSource fileContent = null, IProject parentProject = null,
-		                                 CancellationToken cancellationToken = default(CancellationToken));
+		                                     CancellationToken cancellationToken = default(CancellationToken));
 		#endregion
 		
 		#region Resolve
@@ -234,6 +253,14 @@ namespace ICSharpCode.SharpDevelop.Parser
 		Task FindLocalReferencesAsync(FileName fileName, IVariable variable, Action<SearchResultMatch> callback,
 		                              ITextSource fileContent = null, ICompilation compilation = null,
 		                              CancellationToken cancellationToken = default(CancellationToken));
+		
+		ICodeContext ResolveContext(ITextEditor editor, TextLocation location,
+		                            ICompilation compilation = null,
+		                            CancellationToken cancellationToken = default(CancellationToken));
+		
+		ICodeContext ResolveContext(FileName fileName, TextLocation location,
+		                            ITextSource fileContent = null, ICompilation compilation = null,
+		                            CancellationToken cancellationToken = default(CancellationToken));
 		#endregion
 		
 		#region Parsed File Listeners

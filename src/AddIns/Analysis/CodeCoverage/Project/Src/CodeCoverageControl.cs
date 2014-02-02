@@ -1,12 +1,27 @@
-﻿// Copyright (c) AlphaSierraPapa for the SharpDevelop Team (for details please see \doc\copyright.txt)
-// This code is distributed under the GNU LGPL (for details please see \doc\license.txt)
+﻿// Copyright (c) 2014 AlphaSierraPapa for the SharpDevelop Team
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this
+// software and associated documentation files (the "Software"), to deal in the Software
+// without restriction, including without limitation the rights to use, copy, modify, merge,
+// publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons
+// to whom the Software is furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in all copies or
+// substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+// INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+// PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+// FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
 
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using System.Windows.Forms.Integration;
-
 using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.AddIn;
 using ICSharpCode.AvalonEdit.Document;
@@ -35,6 +50,7 @@ namespace ICSharpCode.CodeCoverage
 		ColumnHeader endLineColumnHeader;
 		ColumnHeader startColumnColumnHeader;
 		ColumnHeader endColumnColumnHeader;
+		ColumnHeader contentColumnHeader;
 		ToolStrip toolStrip;
 		bool showSourceCodePanel;
 		bool showVisitCountPanel = true;
@@ -301,11 +317,14 @@ namespace ICSharpCode.CodeCoverage
 			item.SubItems.Add(sequencePoint.Column.ToString());
 			item.SubItems.Add(sequencePoint.EndLine.ToString());
 			item.SubItems.Add(sequencePoint.EndColumn.ToString());
+			item.SubItems.Add(sequencePoint.Content.Length>80?sequencePoint.Content.Substring(0,80):sequencePoint.Content);
+			item.BackColor = CodeCoverageHighlighter.GetSequencePointBackColor(sequencePoint);
+			item.ForeColor = CodeCoverageHighlighter.GetSequencePointForeColor(sequencePoint);
 			item.Tag = sequencePoint;
 			
 			listView.Items.Add(item);
 		}
-		
+
 		void ListViewItemActivate(object sender, EventArgs e)
 		{
 			if (listView.SelectedItems.Count > 0) {
@@ -393,32 +412,40 @@ namespace ICSharpCode.CodeCoverage
 			listView.FullRowSelect = true;
 			listView.HideSelection = false;
 			listView.ItemActivate += ListViewItemActivate;
+			
+			listView.Font = Core.WinForms.WinFormsResourceService.DefaultMonospacedFont;
 						
 			visitCountColumnHeader = new ColumnHeader();
 			visitCountColumnHeader.Text = StringParser.Parse("${res:ICSharpCode.CodeCoverage.VisitCount}");
-			visitCountColumnHeader.Width = 80;
+			visitCountColumnHeader.Width = -2;
 			
 			startLineColumnHeader = new ColumnHeader();
 			startLineColumnHeader.Text = StringParser.Parse("${res:Global.TextLine}");
-			startLineColumnHeader.Width = 80;
+			startLineColumnHeader.Width = -2;
 				
 			startColumnColumnHeader = new ColumnHeader();
 			startColumnColumnHeader.Text = StringParser.Parse("${res:ICSharpCode.CodeCoverage.Column}");
-			startColumnColumnHeader.Width = 80;
+			startColumnColumnHeader.Width = -2;
 
 			endLineColumnHeader = new ColumnHeader();
 			endLineColumnHeader.Text = StringParser.Parse("${res:ICSharpCode.CodeCoverage.EndLine}");
-			endLineColumnHeader.Width = 80;
+			endLineColumnHeader.Width = -2;
 
 			endColumnColumnHeader = new ColumnHeader();
 			endColumnColumnHeader.Text = StringParser.Parse("${res:ICSharpCode.CodeCoverage.EndColumn}");
-			endColumnColumnHeader.Width = 80;
+			endColumnColumnHeader.Width = -2;
+
+			contentColumnHeader = new ColumnHeader();
+			contentColumnHeader.Text = StringParser.Parse("${res:ICSharpCode.CodeCoverage.Content}");
+			contentColumnHeader.Width = 500;
 
 			listView.Columns.AddRange(new ColumnHeader[] {visitCountColumnHeader,
 			   	                      startLineColumnHeader,
 			                          startColumnColumnHeader,
 			                          endLineColumnHeader,
-			                          endColumnColumnHeader});
+			                          endColumnColumnHeader,
+			                          contentColumnHeader
+			                          });
 			
 			// Create custom list view sorter.
 			sequencePointListViewSorter = new SequencePointListViewSorter(listView);

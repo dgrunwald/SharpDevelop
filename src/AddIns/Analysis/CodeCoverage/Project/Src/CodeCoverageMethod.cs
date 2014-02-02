@@ -1,5 +1,20 @@
-﻿// Copyright (c) AlphaSierraPapa for the SharpDevelop Team (for details please see \doc\copyright.txt)
-// This code is distributed under the GNU LGPL (for details please see \doc\license.txt)
+﻿// Copyright (c) 2014 AlphaSierraPapa for the SharpDevelop Team
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this
+// software and associated documentation files (the "Software"), to deal in the Software
+// without restriction, including without limitation the rights to use, copy, modify, merge,
+// publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons
+// to whom the Software is furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in all copies or
+// substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+// INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+// PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+// FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
 
 using System;
 using System.Collections.Generic;
@@ -33,7 +48,9 @@ namespace ICSharpCode.CodeCoverage
 		}
 		
 		public CodeCoverageMethod(string className, XElement reader)
-			: this(className, new CodeCoverageMethodElement(reader))
+		    : this (className, reader, null) {}
+		public CodeCoverageMethod(string className, XElement reader, CodeCoverageResults parent)
+			: this(className, new CodeCoverageMethodElement(reader, parent))
 		{
 		}
 		
@@ -43,6 +60,13 @@ namespace ICSharpCode.CodeCoverage
 			IsProperty = element.IsProperty && IsPropertyMethodName();
 			IsGetter = element.IsGetter;
 			IsSetter = element.IsSetter;
+
+			this.IsVisited = element.IsVisited;
+			this.BranchCoverage = element.BranchCoverage;
+			this.BranchCoverageRatio = element.BranchCoverageRatio;
+			this.SequencePointsCount = element.SequencePointsCount;
+			this.sequencePoints = element.SequencePoints;
+			
 		}
 		
 		/// <summary>
@@ -52,6 +76,11 @@ namespace ICSharpCode.CodeCoverage
 		public bool IsGetter { get; private set; }
 		public bool IsSetter { get; private set; }
 		
+		public bool IsVisited { get; private set; }
+		public decimal BranchCoverage { get; private set; }
+		public Tuple<int,int> BranchCoverageRatio { get; private set; }
+		public int SequencePointsCount { get; private set; }
+
 		bool IsPropertyMethodName()
 		{
 			return name.Contains("get_") || name.Contains("set_");
@@ -97,7 +126,7 @@ namespace ICSharpCode.CodeCoverage
 			get {
 				int count = 0;
 				foreach (CodeCoverageSequencePoint sequencePoint in sequencePoints) {
-					if (sequencePoint.VisitCount > 0) {
+					if (sequencePoint.VisitCount != 0) {
 						count++;
 					}
 				}
@@ -121,7 +150,7 @@ namespace ICSharpCode.CodeCoverage
 		{
 			int total = 0;
 			foreach (CodeCoverageSequencePoint sequencePoint in sequencePoints) {
-				if (sequencePoint.VisitCount > 0) {
+				if (sequencePoint.VisitCount != 0) {
 					total += sequencePoint.Length;
 				}
 			}
@@ -199,8 +228,9 @@ namespace ICSharpCode.CodeCoverage
 		public static List<CodeCoverageMethod> GetAllMethods(List<CodeCoverageMethod> methods, string namespaceStartsWith)
 		{
 			List<CodeCoverageMethod> matchedMethods = new List<CodeCoverageMethod>();
+			namespaceStartsWith += ".";
 			foreach (CodeCoverageMethod method in methods) {
-				if (method.ClassNamespace.StartsWith(namespaceStartsWith)) {
+			    if ((method.ClassNamespace+".").StartsWith(namespaceStartsWith)) {
 					matchedMethods.Add(method);
 				}
 			}

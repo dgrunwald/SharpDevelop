@@ -1,5 +1,20 @@
-﻿// Copyright (c) AlphaSierraPapa for the SharpDevelop Team (for details please see \doc\copyright.txt)
-// This code is distributed under the GNU LGPL (for details please see \doc\license.txt)
+﻿// Copyright (c) 2014 AlphaSierraPapa for the SharpDevelop Team
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this
+// software and associated documentation files (the "Software"), to deal in the Software
+// without restriction, including without limitation the rights to use, copy, modify, merge,
+// publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons
+// to whom the Software is furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in all copies or
+// substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+// INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+// PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+// FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
 
 using System;
 using System.Collections.Generic;
@@ -267,7 +282,7 @@ namespace ICSharpCode.SharpDevelop.Templates
 		
 		#region Create new project from template
 		//Show prompt, create files from template, create project, execute command, save project
-		public IProject CreateProject(ProjectTemplateResult templateResults, string defaultLanguage)
+		public bool CreateProject(ProjectTemplateResult templateResults, string defaultLanguage, ISolutionFolder target)
 		{
 			var projectCreateOptions = templateResults.Options;
 			var parentSolution = templateResults.Options.Solution;
@@ -283,7 +298,7 @@ namespace ICSharpCode.SharpDevelop.Templates
 					MessageService.ShowError(
 						StringParser.Parse("${res:ICSharpCode.SharpDevelop.Internal.Templates.ProjectDescriptor.CantCreateProjectWithTypeError}",
 						                   new StringTagPair("type", language)));
-					return null;
+					return false;
 				}
 				
 				DirectoryName projectBasePath = projectCreateOptions.ProjectBasePath;
@@ -335,7 +350,7 @@ namespace ICSharpCode.SharpDevelop.Templates
 						                   new StringTagPair("projectLocation", projectLocation)),
 						"${res:ICSharpCode.SharpDevelop.Internal.Templates.ProjectDescriptor.OverwriteQuestion.InfoName}"))
 					{
-						return null; //The user doesnt want to overwrite the project...
+						return false; //The user doesnt want to overwrite the project...
 					}
 				}
 				
@@ -408,10 +423,11 @@ namespace ICSharpCode.SharpDevelop.Templates
 				
 				#region Create Project
 				try {
+					info.InitializeTypeSystem = false;
 					project = languageinfo.CreateProject(info);
 				} catch (ProjectLoadException ex) {
 					MessageService.ShowError(ex.Message);
-					return null;
+					return false;
 				}
 				#endregion
 				
@@ -511,11 +527,18 @@ namespace ICSharpCode.SharpDevelop.Templates
 				// Save project
 				project.Save();
 				
+				// HACK : close and reload
+				var fn = project.FileName;
+				project.Dispose();
+				ProjectLoadInformation loadInfo = new ProjectLoadInformation(parentSolution, fn, fn.GetFileNameWithoutExtension());
+				project = SD.ProjectService.LoadProject(loadInfo);
+				target.Items.Add(project);
+				project.ProjectLoaded();
 				
 				SD.GetRequiredService<IProjectServiceRaiseEvents>().RaiseProjectCreated(new ProjectEventArgs(project));
 				templateResults.NewProjects.Add(project);
 				success = true;
-				return project;
+				return true;
 			} finally {
 				if (project != null && !success)
 					project.Dispose();

@@ -1,20 +1,28 @@
-﻿// Copyright (c) AlphaSierraPapa for the SharpDevelop Team (for details please see \doc\copyright.txt)
-// This code is distributed under the GNU LGPL (for details please see \doc\license.txt)
+﻿// Copyright (c) 2014 AlphaSierraPapa for the SharpDevelop Team
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this
+// software and associated documentation files (the "Software"), to deal in the Software
+// without restriction, including without limitation the rights to use, copy, modify, merge,
+// publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons
+// to whom the Software is furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in all copies or
+// substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+// INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+// PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+// FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.Design;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Threading;
-using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.Editing;
-using ICSharpCode.AvalonEdit.Rendering;
-using CSharpBinding.Parser;
+using ICSharpCode.AvalonEdit.Snippets;
 using ICSharpCode.AvalonEdit.Document;
 using ICSharpCode.NRefactory;
 using ICSharpCode.NRefactory.CSharp;
@@ -23,7 +31,6 @@ using ICSharpCode.NRefactory.Editor;
 using ICSharpCode.NRefactory.TypeSystem;
 using ICSharpCode.SharpDevelop;
 using ICSharpCode.SharpDevelop.Editor;
-using ICSharpCode.SharpDevelop.Parser;
 
 namespace CSharpBinding.Refactoring
 {
@@ -66,12 +73,31 @@ namespace CSharpBinding.Refactoring
 			editor.Select(startOffset, endOffset - startOffset);
 		}
 		
-		static readonly Task completedTask = Task.FromResult<object>(null);
-		
 		public override Task Link(params AstNode[] nodes)
 		{
-			// TODO
-			return completedTask;
+			var segs = nodes.Select(node => GetSegment(node)).ToArray();
+			InsertionContext c = new InsertionContext(editor.GetRequiredService<TextArea>(), segs.Min(seg => seg.Offset));
+			c.InsertionPosition = segs.Max(seg => seg.EndOffset);
+			
+			var tcs = new TaskCompletionSource<bool>();
+			c.Deactivated += (sender, e) => tcs.SetResult(true);
+			
+			if (segs.Length > 0) {
+				// try to use node in identifier context to avoid the code completion popup.
+				var identifier = nodes.OfType<Identifier>().FirstOrDefault();
+				ISegment first;
+				if (identifier == null)
+					first = segs[0];
+				else
+					first = GetSegment(identifier);
+				c.Link(first, segs.Except(new[]{first}).ToArray());
+				c.RaiseInsertionCompleted(EventArgs.Empty);
+			} else {
+				c.RaiseInsertionCompleted(EventArgs.Empty);
+				c.Deactivate(new SnippetEventArgs(DeactivateReason.NoActiveElements));
+			}
+			
+			return tcs.Task;
 		}
 		
 		public override Task<Script> InsertWithCursor(string operation, InsertPosition defaultPosition, IList<AstNode> nodes)
@@ -133,13 +159,16 @@ namespace CSharpBinding.Refactoring
 						    args.InsertionPoint.LineBefore == NewLineInsertion.None && nodes.Count > 1) {
 							args.InsertionPoint.LineAfter = NewLineInsertion.BlankLine;
 						}
-						foreach (var node in nodes.Reverse ()) {
-							int indentLevel = currentScript.GetIndentLevelAt(target.GetOffset(args.InsertionPoint.Location));
+
+						int offset = currentScript.GetCurrentOffset(args.InsertionPoint.Location);
+						int indentLevel = currentScript.GetIndentLevelAt(offset);
+						
+						foreach (var node in nodes.Reverse()) {
 							var output = currentScript.OutputNode(indentLevel, node);
-							var offset = target.GetOffset(args.InsertionPoint.Location);
-							var delta = args.InsertionPoint.Insert(target, output.Text);
+							int delta = args.InsertionPoint.Insert(target, output.Text);
 							output.RegisterTrackedSegments(currentScript, delta + offset);
 						}
+						currentScript.FormatText(nodes);
 						tcs.SetResult(currentScript);
 					}
 					layer.Dispose();
@@ -256,128 +285,6 @@ namespace CSharpBinding.Refactoring
 			public void Redo()
 			{
 			}
-		}
-	}
-	
-	class InsertionCursorLayer : UIElement, IDisposable
-	{
-		string operation;
-		InsertionPoint[] insertionPoints;
-		readonly TextArea editor;
-		
-		public int CurrentInsertionPoint { get; set; }
-		
-		public event EventHandler<InsertionCursorEventArgs> Exited;
-		
-		public static readonly RoutedCommand ExitCommand = new RoutedCommand(
-			"Exit", typeof(InsertionCursorLayer),
-			new InputGestureCollection { new KeyGesture(Key.Escape) }
-		);
-		
-		public InsertionCursorLayer(TextArea editor, string operation, IList<InsertionPoint> insertionPoints)
-		{
-			if (editor == null)
-				throw new ArgumentNullException("editor");
-			this.editor = editor;
-			this.operation = operation;
-			this.insertionPoints = insertionPoints.ToArray();
-			this.editor.ActiveInputHandler = new InputHandler(this);
-			this.editor.TextView.InsertLayer(this, KnownLayer.Text, LayerInsertionPosition.Above);
-			this.editor.TextView.ScrollOffsetChanged += TextViewScrollOffsetChanged;
-			ScrollToInsertionPoint();
-		}
-		
-		static readonly Pen markerPen = new Pen(Brushes.Blue, 1);
-		
-		protected override void OnRender(DrawingContext drawingContext)
-		{
-			var currentInsertionPoint = insertionPoints[CurrentInsertionPoint];
-			var pos = editor.TextView.GetVisualPosition(new TextViewPosition(currentInsertionPoint.Location), VisualYPosition.LineMiddle);
-			var endPos = new Point(pos.X + editor.TextView.ActualWidth * 0.6, pos.Y);
-			drawingContext.DrawLine(markerPen, pos - editor.TextView.ScrollOffset, endPos - editor.TextView.ScrollOffset);
-		}
-		
-		void TextViewScrollOffsetChanged(object sender, EventArgs e)
-		{
-			InvalidateVisual();
-		}
-		
-		class InputHandler : TextAreaDefaultInputHandler
-		{
-			readonly InsertionCursorLayer layer;
-			
-			internal InputHandler(InsertionCursorLayer layer)
-				: base(layer.editor)
-			{
-				this.layer = layer;
-				AddBinding(EditingCommands.MoveDownByLine, ModifierKeys.None, Key.Down, MoveMarker(false));
-				AddBinding(EditingCommands.MoveUpByLine, ModifierKeys.None, Key.Up, MoveMarker(true));
-				AddBinding(EditingCommands.EnterParagraphBreak, ModifierKeys.None, Key.Enter, layer.InsertCode);
-				AddBinding(ExitCommand, ModifierKeys.None, Key.Escape, layer.Cancel);
-			}
-			
-			ExecutedRoutedEventHandler MoveMarker(bool up)
-			{
-				return (sender, e) => {
-					if (up)
-						layer.CurrentInsertionPoint = Math.Max(0, layer.CurrentInsertionPoint - 1);
-					else
-						layer.CurrentInsertionPoint = Math.Min(layer.insertionPoints.Length - 1, layer.CurrentInsertionPoint + 1);
-					layer.InvalidateVisual();
-					layer.ScrollToInsertionPoint();
-				};
-			}
-		}
-		
-		public void Dispose()
-		{
-			editor.TextView.Layers.Remove(this);
-			editor.ActiveInputHandler = editor.DefaultInputHandler;
-			editor.TextView.ScrollOffsetChanged -= TextViewScrollOffsetChanged;
-		}
-		
-		void InsertCode(object sender, ExecutedRoutedEventArgs e)
-		{
-			FireExited(true);
-		}
-
-		void ScrollToInsertionPoint()
-		{
-			var location = insertionPoints[CurrentInsertionPoint].Location;
-			editor.GetService<TextEditor>().ScrollTo(location.Line, location.Column);
-		}
-
-		void Cancel(object sender, ExecutedRoutedEventArgs e)
-		{
-			FireExited(false);
-		}
-		/// <summary>
-		/// call this somewhere useful, please... :)
-		/// </summary>
-		public void EndMode()
-		{
-			FireExited(false);
-		}
-
-		void FireExited(bool success)
-		{
-			if (Exited != null) {
-				Exited(this, new InsertionCursorEventArgs(insertionPoints[CurrentInsertionPoint], success));
-			}
-		}
-	}
-	
-	public class InsertionCursorEventArgs : EventArgs
-	{
-		public InsertionPoint InsertionPoint { get; private set; }
-		public bool Success { get; private set; }
-		
-		public InsertionCursorEventArgs(InsertionPoint insertionPoint, bool success)
-		{
-			if (insertionPoint == null)
-				throw new ArgumentNullException("insertionPoint");
-			this.InsertionPoint = insertionPoint;
-			this.Success = success;
 		}
 	}
 }

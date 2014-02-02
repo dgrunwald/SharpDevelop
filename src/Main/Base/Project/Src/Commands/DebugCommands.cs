@@ -1,5 +1,20 @@
-﻿// Copyright (c) AlphaSierraPapa for the SharpDevelop Team (for details please see \doc\copyright.txt)
-// This code is distributed under the GNU LGPL (for details please see \doc\license.txt)
+﻿// Copyright (c) 2014 AlphaSierraPapa for the SharpDevelop Team
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this
+// software and associated documentation files (the "Software"), to deal in the Software
+// without restriction, including without limitation the rights to use, copy, modify, merge,
+// publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons
+// to whom the Software is furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in all copies or
+// substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+// INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+// PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+// FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
 
 using System;
 using System.Collections.Generic;
@@ -48,11 +63,11 @@ namespace ICSharpCode.SharpDevelop.Project.Commands
 	{
 		public override void Run()
 		{
-			if (DebuggerService.CurrentDebugger.IsDebugging) {
-				LoggingService.Info("Debugger Command: Continue");
-				DebuggerService.CurrentDebugger.Continue();
+			if (SD.Debugger.IsDebugging) {
+				SD.Log.Info("Debugger Command: Continue");
+				SD.Debugger.Continue();
 			} else {
-				LoggingService.Info("Debugger Command: Run");
+				SD.Log.Info("Debugger Command: Run");
 				new Execute().Run();
 			}
 		}
@@ -62,8 +77,8 @@ namespace ICSharpCode.SharpDevelop.Project.Commands
 	{
 		public override void Run()
 		{
-			LoggingService.Info("Debugger Command: Break");
-			DebuggerService.CurrentDebugger.Break();
+			SD.Log.Info("Debugger Command: Break");
+			SD.Debugger.Break();
 		}
 	}
 	
@@ -71,8 +86,8 @@ namespace ICSharpCode.SharpDevelop.Project.Commands
 	{
 		public override void Run()
 		{
-			LoggingService.Info("Debugger Command: Stop");
-			DebuggerService.CurrentDebugger.Stop();
+			SD.Log.Info("Debugger Command: Stop");
+			SD.Debugger.Stop();
 		}
 	}
 	
@@ -80,12 +95,12 @@ namespace ICSharpCode.SharpDevelop.Project.Commands
 	{
 		public override void Run()
 		{
-			LoggingService.Info("Debugger Command: StepOver");
-			if (!DebuggerService.CurrentDebugger.IsDebugging) {
-				DebuggerService.CurrentDebugger.BreakAtBeginning = true;
+			SD.Log.Info("Debugger Command: StepOver");
+			if (!SD.Debugger.IsDebugging) {
+				SD.Debugger.BreakAtBeginning = true;
 				new Execute().Run();
 			} else {
-				DebuggerService.CurrentDebugger.StepOver();
+				SD.Debugger.StepOver();
 			}
 		}
 	}
@@ -94,12 +109,12 @@ namespace ICSharpCode.SharpDevelop.Project.Commands
 	{
 		public override void Run()
 		{
-			LoggingService.Info("Debugger Command: StepInto");
-			if (!DebuggerService.CurrentDebugger.IsDebugging) {
-				DebuggerService.CurrentDebugger.BreakAtBeginning = true;
+			SD.Log.Info("Debugger Command: StepInto");
+			if (!SD.Debugger.IsDebugging) {
+				SD.Debugger.BreakAtBeginning = true;
 				new Execute().Run();
 			} else {
-				DebuggerService.CurrentDebugger.StepInto();
+				SD.Debugger.StepInto();
 			}
 		}
 	}
@@ -108,8 +123,8 @@ namespace ICSharpCode.SharpDevelop.Project.Commands
 	{
 		public override void Run()
 		{
-			LoggingService.Info("Debugger Command: StepOut");
-			DebuggerService.CurrentDebugger.StepOut();
+			SD.Log.Info("Debugger Command: StepOut");
+			SD.Debugger.StepOut();
 		}
 	}
 	
@@ -121,7 +136,7 @@ namespace ICSharpCode.SharpDevelop.Project.Commands
 			
 			if (editor != null) {
 				if (!string.IsNullOrEmpty(editor.FileName)) {
-					DebuggerService.ToggleBreakpointAt(editor, editor.Caret.Line);
+					SD.Debugger.ToggleBreakpointAt(editor, editor.Caret.Line);
 				}
 			}
 		}
@@ -131,7 +146,7 @@ namespace ICSharpCode.SharpDevelop.Project.Commands
 	{
 		public override void Run()
 		{
-			DebuggerService.CurrentDebugger.ShowAttachDialog();
+			SD.Debugger.ShowAttachDialog();
 		}
 	}
 	
@@ -139,7 +154,7 @@ namespace ICSharpCode.SharpDevelop.Project.Commands
 	{
 		public override void Run()
 		{
-			DebuggerService.CurrentDebugger.Detach();
+			SD.Debugger.Detach();
 		}
 	}
 	
