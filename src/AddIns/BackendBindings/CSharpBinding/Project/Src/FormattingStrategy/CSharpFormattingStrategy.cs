@@ -21,9 +21,11 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
+using ICSharpCode.AvalonEdit.Document;
 using ICSharpCode.AvalonEdit.Highlighting;
 using ICSharpCode.AvalonEdit.Indentation.CSharp;
 using ICSharpCode.Core;
+using ICSharpCode.NRefactory.CSharp;
 using ICSharpCode.NRefactory.Editor;
 using ICSharpCode.NRefactory.TypeSystem;
 using ICSharpCode.SharpDevelop;
@@ -41,26 +43,38 @@ namespace CSharpBinding.FormattingStrategy
 		#region Smart Indentation
 		public override void IndentLine(ITextEditor editor, IDocumentLine line)
 		{
-			int lineNr = line.LineNumber;
-			DocumentAccessor acc = new DocumentAccessor(editor.Document, lineNr, lineNr);
-			
-			CSharpIndentationStrategy indentStrategy = new CSharpIndentationStrategy();
-			indentStrategy.IndentationString = editor.Options.IndentationString;
-			indentStrategy.Indent(acc, false);
-			
-			string t = acc.Text;
-			if (t.Length == 0) {
-				// use AutoIndentation for new lines in comments / verbatim strings.
-				base.IndentLine(editor, line);
-			}
+			var document = editor.Document;
+			var engine = CreateIndentEngine(document, editor.ToEditorOptions());
+			IndentSingleLine(engine, document, line);
 		}
 		
 		public override void IndentLines(ITextEditor editor, int beginLine, int endLine)
 		{
-			DocumentAccessor acc = new DocumentAccessor(editor.Document, beginLine, endLine);
-			CSharpIndentationStrategy indentStrategy = new CSharpIndentationStrategy();
-			indentStrategy.IndentationString = editor.Options.IndentationString;
-			indentStrategy.Indent(acc, true);
+			var document = editor.Document;
+			var engine = CreateIndentEngine(document, editor.ToEditorOptions());
+			int currentLine = beginLine;
+			do {
+				var line = document.GetLineByNumber(currentLine);
+				IndentSingleLine(engine, document, line);
+			} while (++currentLine <= endLine);
+		}
+
+		static void IndentSingleLine(CacheIndentEngine engine, IDocument document, IDocumentLine line)
+		{
+			engine.Update(line.EndOffset);
+			if (engine.NeedsReindent) {
+				var indentation = TextUtilities.GetWhitespaceAfter(document, line.Offset);
+				// replacing the indentation in two steps is necessary to make the caret move accordingly.
+				document.Replace(indentation.Offset, indentation.Length, "");
+				document.Replace(indentation.Offset, 0, engine.ThisLineIndent);
+				engine.ResetEngineToPosition(line.Offset);
+			}
+		}
+		
+		static CacheIndentEngine CreateIndentEngine(IDocument document, TextEditorOptions options)
+		{
+			var engine = new CSharpIndentEngine(document, options, FormattingOptionsFactory.CreateSharpDevelop());
+			return new CacheIndentEngine(engine);
 		}
 		#endregion
 		
@@ -180,7 +194,7 @@ namespace CSharpBinding.FormattingStrategy
 				char ch = textArea.Document.GetCharAt(i);
 				if (ch == '"') {
 					// parsing strings correctly is too complicated (see above),
-					// but I don't now any case where a doc comment is after a string...
+					// but I don't know any case where a doc comment is after a string...
 					return false;
 				}
 				if (ch == '/' && i + 2 < cursorOffset && textArea.Document.GetCharAt(i + 1) == '/' && textArea.Document.GetCharAt(i + 2) == '/') {
@@ -260,11 +274,11 @@ namespace CSharpBinding.FormattingStrategy
 			string terminator = DocumentUtilities.GetLineTerminator(textArea.Document, lineNr);
 			
 			string curLineText;
-			//// local string for curLine segment
+			// local string for curLine segment
 			if (ch == '/') {
 				curLineText = textArea.Document.GetText(curLine);
 				string lineAboveText = lineAbove == null ? "" : textArea.Document.GetText(lineAbove);
-				if (curLineText != null && curLineText.EndsWith("///") && (lineAboveText == null || !lineAboveText.Trim().StartsWith("///"))) {
+				if (curLineText != null && curLineText.EndsWith("///", StringComparison.Ordinal) && (lineAboveText == null || !lineAboveText.Trim().StartsWith("///", StringComparison.Ordinal))) {
 					string indentation = DocumentUtilities.GetWhitespaceAfter(textArea.Document, curLine.Offset);
 					IUnresolvedEntity member = GetMemberAfter(textArea, lineNr);
 					if (member != null) {
@@ -327,10 +341,10 @@ namespace CSharpBinding.FormattingStrategy
 								commentBuilder.Append(curLineText[ i]);
 							}
 							string tag = commentBuilder.ToString().Trim();
-							if (!tag.EndsWith(">")) {
+							if (!tag.EndsWith(">", StringComparison.Ordinal)) {
 								tag += ">";
 							}
-							if (!tag.StartsWith("/")) {
+							if (!tag.StartsWith("/", StringComparison.Ordinal)) {
 								textArea.Document.Insert(cursorOffset, "</" + tag.Substring(1), AnchorMovementType.BeforeInsertion);
 							}
 						}
@@ -347,10 +361,10 @@ namespace CSharpBinding.FormattingStrategy
 					break;
 				case '\n':
 					string lineAboveText = lineAbove == null ? "" : textArea.Document.GetText(lineAbove);
-					//// curLine might have some text which should be added to indentation
+					// curLine might have some text which should be added to indentation
 					curLineText = textArea.Document.GetText(curLine);
 					
-					if (lineAboveText != null && lineAboveText.Trim().StartsWith("#region")
+					if (lineAboveText != null && lineAboveText.Trim().StartsWith("#region", StringComparison.Ordinal)
 					    && NeedEndregion(textArea.Document))
 					{
 						textArea.Document.Insert(cursorOffset, "#endregion");
@@ -384,8 +398,8 @@ namespace CSharpBinding.FormattingStrategy
 						IDocumentLine nextLine  = lineNr + 1 <= textArea.Document.LineCount ? textArea.Document.GetLineByNumber(lineNr + 1) : null;
 						string nextLineText = (nextLine != null) ? textArea.Document.GetText(nextLine) : "";
 						
-						int indexAbove = lineAboveText.IndexOf("///");
-						int indexNext  = nextLineText.IndexOf("///");
+						int indexAbove = lineAboveText.IndexOf("///", StringComparison.Ordinal);
+						int indexNext = nextLineText.IndexOf("///", StringComparison.Ordinal);
 						if (indexAbove > 0 && (indexNext != -1 || indexAbove + 4 < lineAbove.Length)) {
 							textArea.Document.Insert(cursorOffset, "/// ");
 							return;
@@ -399,7 +413,7 @@ namespace CSharpBinding.FormattingStrategy
 					}
 					if (textArea.Options.AutoInsertBlockEnd && lineAbove != null && isInNormalCode) {
 						string oldLineText = textArea.Document.GetText(lineAbove);
-						if (oldLineText.EndsWith("{")) {
+						if (oldLineText.EndsWith("{", StringComparison.Ordinal)) {
 							if (NeedCurlyBracket(textArea.Document.Text)) {
 								int insertionPoint = curLine.Offset + curLine.Length;
 								textArea.Document.Insert(insertionPoint, terminator + "}");

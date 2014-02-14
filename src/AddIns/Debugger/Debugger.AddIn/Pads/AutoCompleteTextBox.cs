@@ -20,6 +20,7 @@ using System;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
@@ -62,6 +63,8 @@ namespace Debugger.AddIn.Pads.Controls
 			get { return (bool)GetValue(IsEditableProperty); }
 			set { SetValue(IsEditableProperty, value); }
 		}
+
+		public DebuggerCompletionContext DebugContext { get; set; }
 		
 		static void TextChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
 		{
@@ -83,6 +86,7 @@ namespace Debugger.AddIn.Pads.Controls
 			this.editor.ClearValue(TextEditor.FontFamilyProperty);
 			this.editor.ClearValue(TextEditor.FontSizeProperty);
 			this.editor.ShowLineNumbers = false;
+			this.editor.Options.HighlightCurrentLine = false;
 			this.editor.WordWrap = false;
 			this.editor.HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden;
 			this.editor.VerticalScrollBarVisibility = ScrollBarVisibility.Hidden;
@@ -100,6 +104,7 @@ namespace Debugger.AddIn.Pads.Controls
 			this.editor.TextArea.TextEntered += editor_TextArea_TextEntered;
 			
 			this.Content = this.editor.TextArea;
+			this.messageView = new ToolTip { PlacementTarget = this, Placement = PlacementMode.Bottom, StaysOpen = true };
 			
 			HorizontalContentAlignment = HorizontalAlignment.Stretch;
 			VerticalContentAlignment = VerticalAlignment.Stretch;
@@ -117,18 +122,38 @@ namespace Debugger.AddIn.Pads.Controls
 			}
 		}
 		
+		ToolTip messageView;
+		
 		void editor_TextArea_TextEntered(object sender, TextCompositionEventArgs e)
 		{
-			StackFrame frame = WindowsDebugger.CurrentStackFrame;
-			if (e.Text == "." && frame != null)
-				ShowDotCompletion(frame);
-		}
-		
-		void ShowDotCompletion(StackFrame frame)
-		{
-			var binding = DebuggerDotCompletion.PrepareDotCompletion(editor.Text.Substring(0, editor.CaretOffset), frame);
-			if (binding == null) return;
-			binding.HandleKeyPressed(editorAdapter, '.');
+			if (e.Text == ".") {
+				DebuggerCompletionContext context = null;
+				StackFrame frame = WindowsDebugger.CurrentStackFrame;
+				if (frame == null) {
+					if (DebugContext != null) {
+						context = DebugContext;
+					}
+				} else {
+					context = new DebuggerCompletionContext(frame);
+				}
+				if (context == null) return;
+				var binding = DebuggerDotCompletion.PrepareDotCompletion(editor.Text.Substring(0, editor.CaretOffset), context);
+				if (binding == null) return;
+				binding.HandleKeyPressed(editorAdapter, '.');
+			} else {
+				// TODO : implement automated error checking CSharpParser.ParseExpression does not report useful error messages.
+//				Error[] errors;
+//				if (!DebuggerDotCompletion.CheckSyntax(Text, out errors)) {
+//					StringBuilder output = new StringBuilder();
+//					foreach (var error in errors) {
+//						output.AppendLine(error.Message + " at " + error.Region.Begin);
+//					}
+//					messageView.Content = output.ToString();
+//					messageView.IsOpen = true;
+//				} else {
+//					messageView.IsOpen = false;
+//				}
+			}
 		}
 		
 		public void FocusEditor()
