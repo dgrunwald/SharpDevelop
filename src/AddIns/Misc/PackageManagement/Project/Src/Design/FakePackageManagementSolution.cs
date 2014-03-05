@@ -19,9 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ICSharpCode.Core;
 using ICSharpCode.PackageManagement;
-using ICSharpCode.PackageManagement.Scripting;
 using ICSharpCode.SharpDevelop.Project;
 using NuGet;
 
@@ -130,9 +128,17 @@ namespace ICSharpCode.PackageManagement.Design
 			return FakeInstalledPackages.Contains(package);
 		}
 		
+		public ISolutionPackageRepository CreateSolutionPackageRepository()
+		{
+			return null;
+		}
+		
 		public IQueryable<IPackage> GetPackages()
 		{
-			return FakeInstalledPackages.AsQueryable();
+			var allPackages = new List<FakePackage>();
+			allPackages.AddRange(FakeInstalledPackages);
+			allPackages.AddRange(PackagesOnlyInPackagesFolder);
+			return allPackages.AsQueryable();
 		}
 		
 		public void NoProjectsSelected()
@@ -181,6 +187,8 @@ namespace ICSharpCode.PackageManagement.Design
 			return package;
 		}
 		
+		public List<FakePackage> PackagesOnlyInPackagesFolder = new List<FakePackage>();
+		
 		public FakePackage AddPackageToSharedLocalRepository(string packageId)
 		{
 			var package = new FakePackage(packageId);
@@ -191,6 +199,16 @@ namespace ICSharpCode.PackageManagement.Design
 		public string GetInstallPath(IPackage package)
 		{
 			throw new NotImplementedException();
+		}
+		
+		public IQueryable<IPackage> GetSolutionPackages()
+		{
+			throw new NotImplementedException();
+		}
+
+		public IQueryable<IPackage> GetProjectPackages()
+		{
+			return FakeInstalledPackages.AsQueryable();
 		}
 	}
 }

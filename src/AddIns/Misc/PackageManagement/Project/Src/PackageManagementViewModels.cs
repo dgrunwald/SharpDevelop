@@ -27,7 +27,6 @@ namespace ICSharpCode.PackageManagement
 	{
 		ManagePackagesViewModel managePackagesViewModel;
 		RegisteredPackageSourcesViewModel registeredPackageSourcesViewModel;
-		RegisteredPackageSourcesViewModel registeredProjectTemplatePackageSourcesViewModel;
 		PackageManagementOptionsViewModel packageManagementOptionsViewModel;
 		PackageManagementConsoleViewModel packageManagementConsoleViewModel;
 		IPackageManagementSolution solution;
@@ -130,26 +129,6 @@ namespace ICSharpCode.PackageManagement
 				return new DesignTimeRegisteredPackageSourcesViewModel();
 			} else {
 				return new RegisteredPackageSourcesViewModel(packageSources);
-			}
-		}
-		
-		public RegisteredPackageSourcesViewModel RegisteredProjectTemplatePackageSourcesViewModel {
-			get {
-				if (registeredProjectTemplatePackageSourcesViewModel == null) {
-					RegisteredPackageSources packageSources = GetProjectTemplatePackageSources();
-					registeredProjectTemplatePackageSourcesViewModel =
-						CreateRegisteredPackageSourcesViewModel(packageSources);
-				}
-				return registeredProjectTemplatePackageSourcesViewModel;
-			}
-		}
-		
-		RegisteredPackageSources GetProjectTemplatePackageSources()
-		{
-			if (IsInDesignMode()) {
-				return CreateDesignTimeRegisteredPackageSources();
-			} else {
-				return PackageManagementServices.ProjectTemplatePackageSources;
 			}
 		}
 		

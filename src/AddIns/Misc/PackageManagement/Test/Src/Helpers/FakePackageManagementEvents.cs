@@ -66,6 +66,8 @@ namespace PackageManagement.Tests.Helpers
 			return OnAcceptLicensesReturnValue;
 		}
 		
+		public PackageViewModel PackageViewModel;
+		
 		public IPackage PackagePassedToOnParentPackageInstalled;
 		public bool IsOnParentPackageInstalledCalled;
 		

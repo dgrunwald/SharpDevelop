@@ -24,7 +24,7 @@ namespace ICSharpCode.PackageManagement
 	public class UpdatedPackageViewModelFactory : PackageViewModelFactory
 	{
 		SelectedProjectsForUpdatedPackages selectedProjectsForUpdatedPackages;
-		
+
 		public UpdatedPackageViewModelFactory(IPackageViewModelFactory packageViewModelFactory)
 			: base(packageViewModelFactory)
 		{

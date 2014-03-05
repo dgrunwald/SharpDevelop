@@ -26,24 +26,47 @@ namespace ICSharpCode.PackageManagement
 {
 	public class AvailablePackagesViewModel : PackagesViewModel
 	{
-		IPackageRepository repository;
-		string errorMessage;
+		IPackageRepository availablePackagesRepository;
 		
 		public AvailablePackagesViewModel(
+			IPackageManagementSolution solution,
+			IPackageManagementEvents packageManagementEvents,
 			IRegisteredPackageRepositories registeredPackageRepositories,
 			IPackageViewModelFactory packageViewModelFactory,
 			ITaskFactory taskFactory)
-			: base(registeredPackageRepositories, packageViewModelFactory, taskFactory)
+			: base(
+				solution,
+				packageManagementEvents,
+				registeredPackageRepositories, 
+				packageViewModelFactory, 
+				taskFactory)
 		{
 			IsSearchable = true;
 			ShowPackageSources = true;
 			ShowPrerelease = true;
+
+			this.packageManagementEvents = packageManagementEvents;
+			RegisterEvents();
+		}
+		
+		void RegisterEvents()
+		{
+			packageManagementEvents.ParentPackageInstalled += OnPackageChanged;
+			packageManagementEvents.ParentPackageUninstalled += OnPackageChanged;
+			packageManagementEvents.ParentPackagesUpdated += OnPackageChanged;
+		}
+		
+		protected override void OnDispose()
+		{
+			packageManagementEvents.ParentPackageInstalled -= OnPackageChanged;
+			packageManagementEvents.ParentPackageUninstalled -= OnPackageChanged;
+			packageManagementEvents.ParentPackagesUpdated -= OnPackageChanged;
 		}
 		
 		protected override void UpdateRepositoryBeforeReadPackagesTaskStarts()
 		{
 			try {
-				repository = RegisteredPackageRepositories.ActiveRepository;
+				availablePackagesRepository = RegisteredPackageRepositories.ActiveRepository;
 			} catch (Exception ex) {
 				errorMessage = ex.Message;
 			}
@@ -51,13 +74,14 @@ namespace ICSharpCode.PackageManagement
 		
 		protected override IQueryable<IPackage> GetAllPackages()
 		{
-			if (repository == null) {
+			if (availablePackagesRepository == null) {
 				throw new ApplicationException(errorMessage);
 			}
+			
 			if (IncludePrerelease) {
-				return repository.GetPackages();
+				return availablePackagesRepository.GetPackages();
 			}
-			return repository.GetPackages().Where(package => package.IsLatestVersion);
+			return availablePackagesRepository.GetPackages().Where(package => package.IsLatestVersion);
 		}
 		
 		/// <summary>
@@ -78,5 +102,6 @@ namespace ICSharpCode.PackageManagement
 				.Where(package => package.IsReleaseVersion())
 				.DistinctLast<IPackage>(PackageEqualityComparer.Id);
 		}
+
 	}
 }

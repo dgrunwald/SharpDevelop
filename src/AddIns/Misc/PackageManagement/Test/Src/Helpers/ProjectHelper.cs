@@ -31,11 +31,16 @@ namespace PackageManagement.Tests.Helpers
 		public static ISolution CreateSolution()
 		{
 			SD.InitializeForUnitTests();
-			ISolution solution = MockRepository.GenerateStrictMock<ISolution>();
+			return CreateSolutionWithoutInitializingServicesForUnitTests();
+		}
+		
+		public static ISolution CreateSolutionWithoutInitializingServicesForUnitTests()
+		{
+			ISolution solution = MockRepository.GenerateStub<ISolution>();
 			solution.Stub(s => s.MSBuildProjectCollection).Return(new Microsoft.Build.Evaluation.ProjectCollection());
 			solution.Stub(s => s.Projects).Return(new NullSafeSimpleModelCollection<IProject>());
-			solution.Stub(s => s.ActiveConfiguration).Return(new ConfigurationAndPlatform("Debug", "Any CPU"));
-			//solution.Stub(s => s.FileName).Return(FileName.Create(@"d:\projects\Test\TestSolution.sln"));
+			solution.ActiveConfiguration = new ConfigurationAndPlatform("Debug", "Any CPU");
+			solution.Stub(s => s.Items).Return(new NullSafeSimpleModelCollection<ISolutionItem>());
 			return solution;
 		}
 		
@@ -60,6 +65,7 @@ namespace PackageManagement.Tests.Helpers
 			
 			var project = new TestableProject(createInfo);
 			((ICollection<IProject>)parentSolution.Projects).Add(project);
+			((ICollection<ISolutionItem>)parentSolution.Items).Add(project);
 			return project;
 		}
 		

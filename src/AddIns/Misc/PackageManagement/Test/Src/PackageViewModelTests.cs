@@ -220,20 +220,21 @@ namespace PackageManagement.Tests
 		}
 		
 		[Test]
-		public void AddPackage_PackageAddedSuccessfully_PropertyNotifyChangedFiredForIsAddedProperty()
+		public void PackageChanged_PackageAddedSuccessfully_PropertyNotifyChangedFiredForIsAddedProperty()
 		{
 			CreateViewModel();
 			viewModel.AddOneFakeInstallPackageOperationForViewModelPackage();
-
 			string propertyChangedName = null;
 			viewModel.PropertyChanged += (sender, e) => propertyChangedName = e.PropertyName;
 			viewModel.AddPackage();
+		
+			viewModel.PackageChanged();
 			
 			Assert.AreEqual("IsAdded", propertyChangedName);
 		}
 
 		[Test]
-		public void AddPackage_PackageAddedSuccessfully_PropertyNotifyChangedFiredAfterPackageInstalled()
+		public void PackageChanged_PackageAddedSuccessfully_PropertyNotifyChangedFiredAfterPackageInstalled()
 		{
 			CreateViewModel();
 			IPackage packagePassedToInstallPackageWhenPropertyNameChanged = null;
@@ -242,6 +243,8 @@ namespace PackageManagement.Tests
 					fakeSolution.FakeProjectToReturnFromGetProject.LastInstallPackageCreated.Package;
 			};
 			viewModel.AddPackage();
+			
+			viewModel.PackageChanged();
 			
 			Assert.AreEqual(fakePackage, packagePassedToInstallPackageWhenPropertyNameChanged);
 		}
@@ -337,18 +340,20 @@ namespace PackageManagement.Tests
 		}
 		
 		[Test]
-		public void RemovePackage_PackageRemovedSuccessfully_PropertyNotifyChangedFiredForIsAddedProperty()
+		public void PackageChanged_PackageRemovedSuccessfully_PropertyNotifyChangedFiredForIsAddedProperty()
 		{
 			CreateViewModel();
 			string propertyChangedName = null;
 			viewModel.PropertyChanged += (sender, e) => propertyChangedName = e.PropertyName;
 			viewModel.RemovePackage();
 			
+			viewModel.PackageChanged();
+			
 			Assert.AreEqual("IsAdded", propertyChangedName);
 		}
 		
 		[Test]
-		public void RemovePackage_PackageRemovedSuccessfully_PropertyNotifyChangedFiredAfterPackageUninstalled()
+		public void PackageChanged_PackageRemovedSuccessfully_PropertyNotifyChangedFiredAfterPackageUninstalled()
 		{
 			CreateViewModel();
 			IPackage packagePassedToUninstallPackageWhenPropertyNameChanged = null;
@@ -356,6 +361,8 @@ namespace PackageManagement.Tests
 				packagePassedToUninstallPackageWhenPropertyNameChanged = fakeUninstallPackageAction.Package;
 			};
 			viewModel.RemovePackage();
+			
+			viewModel.PackageChanged();
 			
 			Assert.AreEqual(fakePackage, packagePassedToUninstallPackageWhenPropertyNameChanged);
 		}
@@ -811,7 +818,7 @@ namespace PackageManagement.Tests
 		}
 		
 		[Test]
-		public void IsManaged_SolutionSelectedContainingTwoProjects_ReturnsTrue()
+		public void IsManaged_SolutionSelectedContainingTwoProjects_ReturnsFalsew()
 		{
 			CreateFakeSolution();
 			AddProjectToSolution();
@@ -821,11 +828,12 @@ namespace PackageManagement.Tests
 			
 			bool managed = viewModel.IsManaged;
 			
-			Assert.IsTrue(managed);
+			// Only installed project-level package "IsManaged"
+			Assert.IsFalse(managed);
 		}
 		
 		[Test]
-		public void IsManaged_SolutionSelectedContainingOneProject_ReturnsTrue()
+		public void IsManaged_SolutionSelectedContainingOneProject_ReturnsFalse()
 		{
 			CreateFakeSolution();
 			AddProjectToSolution();
@@ -834,7 +842,7 @@ namespace PackageManagement.Tests
 			
 			bool managed = viewModel.IsManaged;
 			
-			Assert.IsTrue(managed);
+			Assert.IsFalse(managed);
 		}
 		
 		[Test]
@@ -890,15 +898,17 @@ namespace PackageManagement.Tests
 		}
 		
 		[Test]
-		public void ManagePackage_TwoProjectsSelectedAndUserAcceptsSelectedProjects_IsAddedPropertyChanged()
+		public void PackageChanged_TwoProjectsSelectedAndUserAcceptsSelectedProjects_IsAddedPropertyChanged()
 		{
 			CreateViewModelWithTwoProjectsSelected("Project A", "Project B");
+			viewModel.FakePackageManagementEvents.ProjectsToSelect.Add("Project A");
+			viewModel.FakePackageManagementEvents.ProjectsToSelect.Add("Project B");
 			UserAcceptsProjectSelection();
-			
 			string propertyChangedName = null;
 			viewModel.PropertyChanged += (sender, e) => propertyChangedName = e.PropertyName;
-			
 			viewModel.ManagePackage();
+			
+			viewModel.PackageChanged();
 			
 			Assert.AreEqual("IsAdded", propertyChangedName);
 		}
@@ -1271,7 +1281,7 @@ namespace PackageManagement.Tests
 			CreateTwoFakeSelectedProjects();
 			FirstFakeSelectedProject.IsSelected = true;
 			AddFakeInstallPackageOperationWithPackageThatRequiresLicenseAcceptance(FirstFakeSelectedProject);
-			fakePackageManagementEvents.OnAcceptLicensesReturnValue = false;
+			fakePackageManagementEvents.OnAcceptLicensesReturnValue = true;
 			
 			viewModel.ManagePackagesForSelectedProjects(fakeSelectedProjects);
 			

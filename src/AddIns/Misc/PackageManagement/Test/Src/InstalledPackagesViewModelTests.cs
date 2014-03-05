@@ -57,7 +57,7 @@ namespace PackageManagement.Tests
 		{
 			registeredPackageRepositories = new FakeRegisteredPackageRepositories();
 			var packageViewModelFactory = new FakePackageViewModelFactory();
-			var installedPackageViewModelFactory = new InstalledPackageViewModelFactory(packageViewModelFactory);
+			var installedPackageViewModelFactory = new PackageViewModelFactory(packageViewModelFactory);
 			taskFactory = new FakeTaskFactory();
 			packageManagementEvents = new PackageManagementEvents();
 			
@@ -252,6 +252,35 @@ namespace PackageManagement.Tests
 			PackageViewModel childViewModel = viewModel.PackageViewModels.First();
 			IPackageViewModelParent parent = childViewModel.GetParent();
 			Assert.AreEqual(viewModel, parent);
+		}
+		
+		[Test]
+		public void PackageViewModels_PackageOnlyInPackagesFolder_ProjectSelected_ReturnsNoPackages()
+		{
+			CreateSolution();
+			CreateViewModel(solution);
+			FakePackage package = FakePackage.CreatePackageWithVersion("One", "1.1");
+			solution.PackagesOnlyInPackagesFolder.Add(package);
+			
+			viewModel.ReadPackages();
+			CompleteReadPackagesTask();
+			
+			Assert.AreEqual(0, viewModel.PackageViewModels.Count);
+		}
+
+		[Test]
+		public void PackageViewModels_PackageOnlyInPackagesFolder_NoProjectSelected_ReturnsOnePackage()
+		{
+			CreateSolution();
+			NoProjectSelected();
+			CreateViewModel(solution);
+			FakePackage package = FakePackage.CreatePackageWithVersion("One", "1.1");
+			solution.PackagesOnlyInPackagesFolder.Add(package);
+			
+			viewModel.ReadPackages();
+			CompleteReadPackagesTask();
+			
+			Assert.AreEqual(1, viewModel.PackageViewModels.Count);
 		}
 	}
 }

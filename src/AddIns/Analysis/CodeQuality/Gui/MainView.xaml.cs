@@ -19,18 +19,14 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Text;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
 
+using ICSharpCode.Reporting.WpfReportViewer;
 using ICSharpCode.CodeQuality.Engine;
 using ICSharpCode.CodeQuality.Engine.Dom;
 using ICSharpCode.CodeQuality.Reporting;
-using ICSharpCode.Reports.Core.WpfReportViewer;
 using ICSharpCode.SharpDevelop.Gui;
 using ICSharpCode.SharpDevelop.Project;
 using Microsoft.Win32;
@@ -77,7 +73,7 @@ namespace ICSharpCode.CodeQuality.Gui
 				return;
 			
 			string fileName = ProjectService.CurrentProject.OutputAssemblyFullPath;
-			if (string.IsNullOrEmpty(fileName))
+			if (!File.Exists(fileName))
 			{
 				MessageBox.Show("Project output assembly not found! Please build it first!");
 				return;
@@ -125,6 +121,7 @@ namespace ICSharpCode.CodeQuality.Gui
 			var previewViewModel = new PreviewViewModel(dependencyReport.ReportSettings,reportCreator.Pages);
 			viewer.SetBinding(previewViewModel);
 			ActivateReportTab();
+			
 		}
 		
 		void ActivateReportTab()

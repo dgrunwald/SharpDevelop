@@ -19,15 +19,14 @@
 using System;
 using System.Linq;
 using ICSharpCode.NRefactory.TypeSystem;
-using ICSharpCode.SharpDevelop.Dom;
-using ICSharpCode.SharpDevelop.Project;
+using ICSharpCode.NRefactory.TypeSystem.Implementation;
 
 namespace ICSharpCode.PackageManagement.EnvDTE
 {
 	public class CodeClass : CodeType, global::EnvDTE.CodeClass
 	{
-		public CodeClass(CodeModelContext context, ITypeDefinitionModel typeModel)
-			: base(context, typeModel)
+		public CodeClass(CodeModelContext context, ITypeDefinition typeDefinition)
+			: base(context, typeDefinition, typeDefinition.TypeArguments.ToArray())
 		{
 		}
 		
@@ -41,30 +40,28 @@ namespace ICSharpCode.PackageManagement.EnvDTE
 		
 		public virtual global::EnvDTE.CodeElements ImplementedInterfaces {
 			get {
-				var list = new CodeElementsList<CodeType>();
-				var td = typeModel.Resolve();
-				if (td != null) {
-					foreach (var baseType in td.GetAllBaseTypes().Where(t => t.Kind == TypeKind.Interface)) {
-						CodeType element = Create(context, baseType);
-						if (element != null)
-							list.Add(element);
+				var interfaces = new CodeElementsList<CodeType>();
+				foreach (IType baseType in typeDefinition.DirectBaseTypes.Where(t => t.Kind == TypeKind.Interface)) {
+					CodeType element = Create(context, baseType);
+					if (element != null) {
+						interfaces.Add(element);
 					}
 				}
-				return list;
+				return interfaces;
 			}
 		}
 		
 		public virtual global::EnvDTE.CodeVariable AddVariable(string name, object type, object Position = null, global::EnvDTE.vsCMAccess Access = global::EnvDTE.vsCMAccess.vsCMAccessPublic, object Location = null)
 		{
-			var fieldTypeName = new FullTypeName((string)type);
-			var td = typeModel.Resolve();
-			if (td == null)
-				return null;
-			IType fieldType = td.Compilation.FindType(fieldTypeName);
-			context.CodeGenerator.AddField(td, Access.ToAccessibility(), fieldType, name);
-			var fieldModel = typeModel.Members.OfType<IFieldModel>().FirstOrDefault(f => f.Name == name);
-			if (fieldModel != null) {
-				return new CodeVariable(context, fieldModel);
+			IType fieldType = FindType((string)type);
+			
+			context.CodeGenerator.AddFieldAtStart(typeDefinition, Access.ToAccessibility(), fieldType, name);
+			
+			ReloadTypeDefinition();
+			
+			IField field = typeDefinition.Fields.FirstOrDefault(f => f.Name == name);
+			if (field != null) {
+				return new CodeVariable(context, field);
 			}
 			return null;
 		}

@@ -21,9 +21,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
-using System.Text;
 using System.Windows.Input;
-
 using NuGet;
 
 namespace ICSharpCode.PackageManagement
@@ -32,6 +30,11 @@ namespace ICSharpCode.PackageManagement
 	{
 		Pages pages = new Pages();
 		
+		protected IPackageManagementEvents packageManagementEvents;
+		protected IPackageManagementSolution solution;
+		protected IPackageManagementProject project;
+		protected string errorMessage = string.Empty;
+
 		IRegisteredPackageRepositories registeredPackageRepositories;
 		IPackageViewModelFactory packageViewModelFactory;
 		ITaskFactory taskFactory;
@@ -40,18 +43,23 @@ namespace ICSharpCode.PackageManagement
 		bool includePrerelease;
 		
 		public PackagesViewModel(
+			IPackageManagementSolution solution,
+			IPackageManagementEvents packageManagementEvents,
 			IRegisteredPackageRepositories registeredPackageRepositories,
 			IPackageViewModelFactory packageViewModelFactory,
 			ITaskFactory taskFactory)
 		{
+			this.solution = solution;
+			this.packageManagementEvents = packageManagementEvents;
 			this.registeredPackageRepositories = registeredPackageRepositories;
 			this.packageViewModelFactory = packageViewModelFactory;
 			this.taskFactory = taskFactory;
+			this.solution = solution;
 			
 			PackageViewModels = new ObservableCollection<PackageViewModel>();
-			ErrorMessage = String.Empty;
 
 			CreateCommands();
+			TryGetActiveProject();
 		}
 		
 		void CreateCommands()
@@ -63,6 +71,15 @@ namespace ICSharpCode.PackageManagement
 			UpdateAllPackagesCommand = new DelegateCommand(param => UpdateAllPackages());
 		}
 		
+		void TryGetActiveProject()
+		{
+			try {
+				project = solution.GetActiveProject();
+			} catch (Exception ex) {
+				errorMessage = ex.Message;
+			}
+		}
+
 		public ICommand ShowNextPageCommand { get; private set; }
 		public ICommand ShowPreviousPageCommand { get; private set; }
 		public ICommand ShowPageCommand { get; private set; }
@@ -89,8 +106,21 @@ namespace ICSharpCode.PackageManagement
 		public IRegisteredPackageRepositories RegisteredPackageRepositories {
 			get { return registeredPackageRepositories; }
 		}
-		
 		public bool IsReadingPackages { get; private set; }
+		
+		protected void OnPackageChanged(object sender, EventArgs e)
+		{
+			if (IsReadingPackages || (PackageViewModels == null)) {
+				return;
+			}
+			
+			// refresh all because we don't know if any dependent package is (un)installed
+			foreach (PackageViewModel packageViewModel in PackageViewModels) {
+				if (!IsReadingPackages) {
+					packageViewModel.PackageChanged();
+				}
+			}
+		}
 		
 		public void ReadPackages()
 		{
@@ -125,9 +155,9 @@ namespace ICSharpCode.PackageManagement
 		{
 			task = taskFactory.CreateTask(
 				() => GetPackagesForSelectedPageResult(),
-				(result) => OnPackagesReadForSelectedPage(result));
+				OnPackagesReadForSelectedPage);
 		}
-		
+
 		PackagesForSelectedPageResult GetPackagesForSelectedPageResult()
 		{
 			IEnumerable<IPackage> packages = GetPackagesForSelectedPage();
@@ -238,6 +268,11 @@ namespace ICSharpCode.PackageManagement
 		protected virtual IQueryable<IPackage> GetAllPackages()
 		{
 			return null;
+		}
+		
+		protected virtual bool IsProjectPackage (IPackage package)
+		{
+			return package.IsProjectPackage();
 		}
 		
 		/// <summary>
