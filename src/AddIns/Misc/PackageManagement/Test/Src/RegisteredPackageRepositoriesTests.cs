@@ -302,5 +302,46 @@ namespace PackageManagement.Tests
 			
 			Assert.IsNull(activePackageSource);
 		}
+		
+		[Test]
+		public void ActivatePackageSource_NullInOptionsAndNoEnabledPackageSources_ReturnsNull()
+		{
+			CreateRegisteredPackageRepositories();
+			packageSourcesHelper.Options.ActivePackageSource = null;
+			registeredRepositories.PackageSources.Clear();
+			registeredRepositories.PackageSources.Add(new PackageSource("source") { IsEnabled = false });
+			
+			PackageSource activePackageSource = registeredRepositories.ActivePackageSource;
+			
+			Assert.IsNull(activePackageSource);
+		}
+		
+		[Test]
+		public void ActivatePackageSource_NullInOptionsAndSecondPackageSourceIsEnabled_ReturnsSecondPackageSource()
+		{
+			CreateRegisteredPackageRepositories();
+			packageSourcesHelper.Options.ActivePackageSource = null;
+			registeredRepositories.PackageSources.Clear();
+			registeredRepositories.PackageSources.Add(new PackageSource("source1") { IsEnabled = false });
+			var expectedPackageSource = new PackageSource("source2") { IsEnabled = true };
+			registeredRepositories.PackageSources.Add(expectedPackageSource);
+			
+			PackageSource activePackageSource = registeredRepositories.ActivePackageSource;
+			
+			Assert.AreEqual(expectedPackageSource, activePackageSource);
+		}
+		
+		[Test]
+		public void ActiveRepository_NullInOptionsAndNoEnabledPackageSources_ThrowsNoPackageSourcesConfiguredException()
+		{
+			CreateRegisteredPackageRepositories();
+			packageSourcesHelper.Options.ActivePackageSource = null;
+			registeredRepositories.PackageSources.Clear();
+			registeredRepositories.PackageSources.Add(new PackageSource("source") { IsEnabled = false });
+			
+			Assert.Throws<NoPackageSourcesConfiguredException>(() => {
+				IPackageRepository repository = registeredRepositories.ActiveRepository;
+			});
+		}
 	}
 }

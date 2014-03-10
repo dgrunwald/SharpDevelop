@@ -17,6 +17,7 @@
 // DEALINGS IN THE SOFTWARE.
 
 using System;
+using ICSharpCode.PackageManagement;
 using ICSharpCode.PackageManagement.Design;
 using NuGet;
 
@@ -32,6 +33,17 @@ namespace PackageManagement.Tests.Helpers
 					throw ExeptionToThrowWhenActiveRepositoryAccessed;
 				}
 				return base.ActiveRepository;
+			}
+		}
+		
+		public Exception ExeptionToThrowWhenRecentPackageRepositoryAccessed { get; set; }
+		
+		public override IRecentPackageRepository RecentPackageRepository {
+			get {
+				if (ExeptionToThrowWhenRecentPackageRepositoryAccessed != null) {
+					throw ExeptionToThrowWhenRecentPackageRepositoryAccessed;
+				}
+				return base.RecentPackageRepository;
 			}
 		}
 	}

@@ -17,15 +17,21 @@
 // DEALINGS IN THE SOFTWARE.
 
 using System;
-using ICSharpCode.SharpDevelop;
-using ICSharpCode.SharpDevelop.Gui;
-using ICSharpCode.SharpDevelop.Workbench;
+using ICSharpCode.Core;
 
-namespace ICSharpCode.Scripting
+namespace ICSharpCode.XmlEditor
 {
-	public interface IScriptingWorkbench
+	/// <summary>
+	/// Expands an element and its descendant elements the selected element in the XML tree.
+	/// </summary>
+	public class ExpandAllCommand : AbstractMenuCommand
 	{
-		IScriptingConsolePad GetScriptingConsolePad();
-		IViewContent ActiveViewContent { get; }
+		public override void Run()
+		{
+			XmlTreeViewContainerControl view = Owner as XmlTreeViewContainerControl;
+			if (view != null) {
+				view.ExpandAll();
+			}
+		}
 	}
 }

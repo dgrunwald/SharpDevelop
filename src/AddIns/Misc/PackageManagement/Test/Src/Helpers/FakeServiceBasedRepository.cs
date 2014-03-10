@@ -17,15 +17,34 @@
 // DEALINGS IN THE SOFTWARE.
 
 using System;
-using ICSharpCode.SharpDevelop;
-using ICSharpCode.SharpDevelop.Gui;
-using ICSharpCode.SharpDevelop.Workbench;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.Versioning;
+using ICSharpCode.PackageManagement.Design;
+using NuGet;
+using Rhino.Mocks;
 
-namespace ICSharpCode.Scripting
+namespace PackageManagement.Tests.Helpers
 {
-	public interface IScriptingWorkbench
+	public class FakeServiceBasedRepository : FakePackageRepository, IServiceBasedRepository
 	{
-		IScriptingConsolePad GetScriptingConsolePad();
-		IViewContent ActiveViewContent { get; }
+		public IServiceBasedRepository Repository = MockRepository.GenerateStub<IServiceBasedRepository>();
+		
+		public IQueryable<IPackage> Search(string searchTerm, IEnumerable<string> targetFrameworks, bool allowPrereleaseVersions)
+		{
+			return Repository.Search(searchTerm, targetFrameworks, allowPrereleaseVersions);
+		}
+		
+		public void PackagesToReturnForSearch(string search, bool allowPrereleaseVersions, IEnumerable<IPackage> packages)
+		{
+			Repository
+				.Stub(repo => repo.Search(search, new string[0], allowPrereleaseVersions))
+				.Return(packages.AsQueryable());
+		}
+		
+		public IEnumerable<IPackage> GetUpdates(IEnumerable<IPackageName> packages, bool includePrerelease, bool includeAllVersions, IEnumerable<FrameworkName> targetFrameworks, IEnumerable<IVersionSpec> versionConstraints)
+		{
+			throw new NotImplementedException();
+		}
 	}
 }

@@ -37,7 +37,7 @@ namespace ICSharpCode.PackageManagement.Design
 		
 		public FakePackageRepository FakeRecentPackageRepository = new FakePackageRepository();
 		
-		public IRecentPackageRepository RecentPackageRepository {
+		public virtual IRecentPackageRepository RecentPackageRepository {
 			get { return FakeRecentPackageRepository; }
 		}
 		
@@ -102,6 +102,11 @@ namespace ICSharpCode.PackageManagement.Design
 			var package = FakePackage.CreatePackageWithVersion(id, version);
 			FakeAggregateRepository.FakePackages.Add(package);
 			return package;
+		}
+		
+		public void UpdatePackageSources(IEnumerable<PackageSource> updatedPackageSources)
+		{
+			throw new NotImplementedException();
 		}
 	}
 }
