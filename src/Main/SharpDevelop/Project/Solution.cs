@@ -18,6 +18,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Drawing.Design;
 using System.IO;
 using System.Linq;
 using System.Windows.Threading;
@@ -25,6 +27,7 @@ using System.Xml;
 using ICSharpCode.Core;
 using ICSharpCode.NRefactory;
 using ICSharpCode.SharpDevelop.Dom;
+using ICSharpCode.SharpDevelop.Gui;
 using ICSharpCode.SharpDevelop.Workbench;
 
 namespace ICSharpCode.SharpDevelop.Project
@@ -32,6 +35,7 @@ namespace ICSharpCode.SharpDevelop.Project
 	class Solution : SolutionFolder, ISolution
 	{
 		FileName fileName;
+		FileName globalSettingsFileName;
 		DirectoryName directory;
 		readonly IProjectChangeWatcher changeWatcher;
 		readonly IFileService fileService;
@@ -48,6 +52,7 @@ namespace ICSharpCode.SharpDevelop.Project
 			this.PlatformNames = new SolutionConfigurationOrPlatformNameCollection(this, true);
 			this.projects = new SynchronizedModelCollection<IProject>(new ProjectModelCollection(this));
 			this.FileName = fileName;
+			this.globalSettingsFileName = new FileName(fileName + ".sdsettings");
 			base.Name = fileName.GetFileNameWithoutExtension();
 			
 			this.globalSections = new SynchronizedModelCollection<SolutionSection>(new NullSafeSimpleModelCollection<SolutionSection>());
@@ -67,6 +72,13 @@ namespace ICSharpCode.SharpDevelop.Project
 			foreach (var project in this.Projects) {
 				project.Dispose();
 			}
+		}
+		
+		/// <summary>
+		/// Gets whether the solution is open in the IDE.
+		/// </summary>
+		internal bool IsLoaded {
+			get { return SD.ProjectService.CurrentSolution == this; }
 		}
 		
 		#region FileName
@@ -266,6 +278,12 @@ namespace ICSharpCode.SharpDevelop.Project
 			get { return preferences; }
 		}
 		
+		Properties globalPreferences = new Properties();
+		
+		public Properties GlobalPreferences {
+			get { return globalPreferences; }
+		}
+		
 		string GetPreferencesKey()
 		{
 			return "solution:" + fileName.ToString().ToUpperInvariant();
@@ -275,6 +293,7 @@ namespace ICSharpCode.SharpDevelop.Project
 		{
 			try {
 				preferences = SD.PropertyService.LoadExtraProperties(GetPreferencesKey());
+				globalPreferences = Properties.Load(globalSettingsFileName);
 			} catch (IOException) {
 			} catch (XmlException) {
 				// ignore errors about inaccessible or malformed files
@@ -298,6 +317,7 @@ namespace ICSharpCode.SharpDevelop.Project
 			
 			try {
 				SD.PropertyService.SaveExtraProperties(GetPreferencesKey(), preferences);
+				globalPreferences.Save(globalSettingsFileName);
 			} catch (IOException) {
 				// ignore errors writing to extra properties
 			}
@@ -327,7 +347,7 @@ namespace ICSharpCode.SharpDevelop.Project
 				else
 				{
 					MessageService.ShowErrorFormatted
-						("${res:SharpDevelop.Solution.CannotSave.UnauthorizedAccessException}", fileName, ex.Message);
+					("${res:SharpDevelop.Solution.CannotSave.UnauthorizedAccessException}", fileName, ex.Message);
 				}
 			}
 		}
@@ -492,6 +512,42 @@ namespace ICSharpCode.SharpDevelop.Project
 		}
 		#endregion
 		
+		[EditorAttribute(typeof(FormatterSettingsEditor), typeof(UITypeEditor))]
+		public object FormatterSettings
+		{
+			get {
+				// We don't need any return value etc.
+				return null;
+			}
+		}
+		
+		/// <summary>
+		/// Pseudo-editor showing a "..." for FormattingSettings option and opening the formatting editor for solution
+		/// </summary>
+		class FormatterSettingsEditor : UITypeEditor
+		{
+			public override UITypeEditorEditStyle GetEditStyle(ITypeDescriptorContext context)
+			{
+				return UITypeEditorEditStyle.Modal;
+			}
+			
+			public override object EditValue(ITypeDescriptorContext context, IServiceProvider provider, object value)
+			{
+				var treeNode = AddInTree.GetTreeNode("/SharpDevelop/Dialogs/SolutionFormattingOptionsDialog", false);
+				bool? result = ICSharpCode.SharpDevelop.Commands.OptionsCommand.ShowTreeOptions(
+					StringParser.Parse("${res:ICSharpCode.SharpDevelop.Project.SolutionFormattingOptions.Title}"),
+					treeNode);
+				if ((bool) result) {
+					// Formatting options have been changed, make solution dirty
+					var solution = context.Instance as Solution;
+					if (solution != null) {
+						solution.IsDirty = true;
+					}
+				}
+				return null;
+			}
+		}
+		
 		public override string ToString()
 		{
 			return "[Solution " + fileName + " with " + projects.Count + " projects]";
@@ -506,3 +562,4 @@ namespace ICSharpCode.SharpDevelop.Project
 		}
 	}
 }
+						

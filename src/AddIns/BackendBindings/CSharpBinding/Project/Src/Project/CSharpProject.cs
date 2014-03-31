@@ -39,6 +39,9 @@ namespace CSharpBinding
 	/// </summary>
 	public class CSharpProject : CompilableProject
 	{
+		Properties globalPreferences;
+		FileName globalSettingsFileName;
+		
 		public override IAmbience GetAmbience()
 		{
 			return new CSharpAmbience();
@@ -63,6 +66,8 @@ namespace CSharpBinding
 		
 		void Init()
 		{
+			globalPreferences = new Properties();
+			
 			reparseReferencesSensitiveProperties.Add("TargetFrameworkVersion");
 			reparseCodeSensitiveProperties.Add("DefineConstants");
 			reparseCodeSensitiveProperties.Add("AllowUnsafeBlocks");
@@ -119,6 +124,36 @@ namespace CSharpBinding
 					CreateCompilerSettings();
 				return compilerSettings;
 			}
+		}
+		
+		public Properties GlobalPreferences
+		{
+			get {
+				return globalPreferences;
+			}
+		}
+		
+		public override void ProjectLoaded()
+		{
+			base.ProjectLoaded();
+			
+			// Load SD settings file
+			globalSettingsFileName = new FileName(FileName + ".sdsettings");
+			if (File.Exists(globalSettingsFileName)) {
+				globalPreferences = Properties.Load(globalSettingsFileName);
+			}
+			if (globalPreferences == null)
+				globalPreferences = new Properties();
+		}
+		
+		public override void Save(string fileName)
+		{
+			// Save project extensions
+			if (globalPreferences != null && globalPreferences.IsDirty) {
+				globalPreferences.Save(new FileName(fileName + ".sdsettings"));
+				globalPreferences.IsDirty = false;
+			}
+			base.Save(fileName);
 		}
 		
 		protected override object CreateCompilerSettings()

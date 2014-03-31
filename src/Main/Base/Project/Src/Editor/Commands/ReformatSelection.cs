@@ -17,37 +17,25 @@
 // DEALINGS IN THE SOFTWARE.
 
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+using ICSharpCode.Core;
 
-using ICSharpCode.SharpDevelop;
-using ICSharpCode.UnitTesting;
-
-namespace ICSharpCode.MachineSpecifications
+namespace ICSharpCode.SharpDevelop.Editor.Commands
 {
-	public class MSpecTestDebugger : TestDebuggerBase
+	/// <summary>
+	/// Menu command to reformat selected code or whole document according to formatter settings.
+	/// </summary>
+	public class ReformatSelection : AbstractMenuCommand
 	{
-		public MSpecTestDebugger()
-			: base(SD.Debugger, SD.MessageService, new MSpecUnitTestMonitor())
+		/// <summary>
+		/// Starts the command.
+		/// </summary>
+		public override void Run()
 		{
-		}
-
-		protected override ProcessStartInfo GetProcessStartInfo(IEnumerable<ITest> selectedTests)
-		{
-			var app = new MSpecApplication(selectedTests);
-			var monitor = TestResultsReader as MSpecUnitTestMonitor;
-			app.Results = monitor.FileName;
-			return app.GetProcessStartInfo();
-		}
-		
-		protected override TestResult CreateTestResultForTestFramework(TestResult testResult)
-		{
-			return testResult;
-		}
-		
-		public override int GetExpectedNumberOfTestResults(IEnumerable<ITest> selectedTests)
-		{
-			return 0;
+			ITextEditor editor = SD.GetActiveViewContentService<ITextEditor>();
+			if (editor == null)
+				return;
+			
+			editor.Language.FormattingStrategy.FormatLines(editor);
 		}
 	}
 }

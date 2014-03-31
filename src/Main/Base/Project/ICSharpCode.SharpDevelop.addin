@@ -1885,12 +1885,10 @@
 			          icon="Icons.16x16.SelectionArrow"
 			          class = "ICSharpCode.SharpDevelop.Editor.Commands.FindReferencesCommand"/>
 			
-			<Condition name="SymbolTypeAtCaret" type="member,type,local" projectonly="true" action="Exclude">
-				<MenuItem id = "Rename"
-				          label = "${res:SharpDevelop.Refactoring.RenameCommand}"
-				          shortcut="Ctrl+R"
-				          class = "ICSharpCode.SharpDevelop.Editor.Commands.RenameSymbolCommand"/>
-			</Condition>
+			<MenuItem id = "Rename"
+			          label = "${res:SharpDevelop.Refactoring.RenameCommand}"
+			          shortcut="Ctrl+R"
+			          class = "ICSharpCode.SharpDevelop.Editor.Commands.RenameSymbolCommand"/>
 			
 			<MenuItem id = "GotoBrace"
 			          label = "${res:XML.MainMenu.SearchMenu.GotoBrace}"
@@ -2078,6 +2076,10 @@
 		          label = "${res:XML.TextAreaContextMenu.Indent}"
 		          shortcut = "Control|I"
 		          class = "ICSharpCode.SharpDevelop.Editor.Commands.IndentSelection" />
+		<MenuItem id = "Reformat"
+		          label = "Reformat"
+		          shortcut = "Control|Alt|F"
+		          class = "ICSharpCode.SharpDevelop.Editor.Commands.ReformatSelection" />
 	</Path>
 	
 	<Path name = "/SharpDevelop/ViewContent/TextEditor/ToolTips">
@@ -2122,6 +2124,7 @@
 			<MenuItem id = "Separator4" type = "Separator" />
 			<Include id = "Comment" item = "/SharpDevelop/ViewContent/TextEditor/ContextMenu/Comment" />
 			<Include id = "Indent" item = "/SharpDevelop/ViewContent/TextEditor/ContextMenu/Indent" />
+			<Include id = "Reformat" item = "/SharpDevelop/ViewContent/TextEditor/ContextMenu/Reformat" />
 		</MenuItem>
 		<MenuItem insertbefore = "SelectAll" id = "Separator3" type = "Separator" />
 	</Path>

@@ -147,6 +147,7 @@
     <Compile Include="Editor\DocumentServiceAttribute.cs" />
     <Compile Include="Editor\DocumentUtilities.cs" />
     <Compile Include="Editor\IBracketSearcher.cs" />
+    <Compile Include="Editor\ICodeEditorOptions.cs" />
     <Compile Include="Editor\IDocumentVersionProvider.cs" />
     <Compile Include="Editor\IEditorControlService.cs" />
     <Compile Include="Editor\IEditorUIService.cs" />
@@ -231,6 +232,7 @@
     <Compile Include="Src\Editor\Commands\DeclaringTypeSubMenuBuilder.cs" />
     <Compile Include="Src\Editor\Commands\FindReferencesCommand.cs" />
     <Compile Include="Src\Editor\Commands\GotoLineNumber.cs" />
+    <Compile Include="Src\Editor\Commands\ReformatSelection.cs" />
     <Compile Include="Src\Editor\Commands\SymbolUnderCaretMenuCommand.cs" />
     <Compile Include="Editor\CodeCompletion\CodeCompletionBinding.cs" />
     <Compile Include="Editor\CodeCompletion\CodeCompletionDataUsageCache.cs" />
