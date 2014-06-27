@@ -61,6 +61,12 @@ namespace ICSharpCode.SharpDevelop
 			return GetDotnet4Release() >= 378675;
 		}
 		
+		public static bool IsDotnet452Installed()
+		{
+			// 379893 is .NET 4.5.2 on my Win7 machine
+			return GetDotnet4Release() >= 379893;
+		}
+		
 		static int? GetDotnet4Release()
 		{
 			using (var key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full")) {
@@ -68,6 +74,17 @@ namespace ICSharpCode.SharpDevelop
 					return key.GetValue("Release") as int?;
 			}
 			return null;
+		}
+		
+		/// <summary>
+		/// Gets whether the Microsoft Build Tools 2013 (MSBuild 12.0) is installed.
+		/// </summary>
+		public static bool IsBuildTools2013Installed()
+		{
+			// HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\DevDiv\BuildTools\Servicing\12.0
+			using (var key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\DevDiv\BuildTools\Servicing\12.0\MSBuild")) {
+				return key != null && key.GetValue("Install") as int? >= 1;
+			}
 		}
 	}
 }

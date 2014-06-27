@@ -274,13 +274,13 @@
 					<DataTemplate>
 						<Grid Margin="0,0,0,0">
 							<Grid.ColumnDefinitions>
-								<ColumnDefinition Width="*" />
+								<ColumnDefinition Width="*" MaxWidth="400" />
 								<ColumnDefinition Width="Auto" SharedSizeGroup="ComboBoxColumn" />
 							</Grid.ColumnDefinitions>
 							<ComboBox Grid.Column="1" Margin="0,0,0,0" MinWidth="100"
 							          VerticalAlignment="Center"
 							          format:FormattingOptionBinding.Container="{Binding ElementName=CSharpFormattingEditor_Self, Path=OptionsContainer}"
-							          format:FormattingOptionBinding.Option="{Binding Option}" />
+							          format:FormattingOptionBinding.FormattingOption="{Binding}" />
 							<sd:RestrictDesiredSize RestrictHeight="False" MinWidth="150">
 								<TextBlock Grid.Column="0"
 								           Text="{Binding Text}"
@@ -297,24 +297,47 @@
 	</UserControl.Resources>
 	
 	<DockPanel>
-		<StackPanel DockPanel.Dock="Top" Orientation="Vertical">
-			<CheckBox
-				Name="autoFormattingCheckBox"
-				Content="{core:Localize CSharpBinding.Formatting.AutoFormat}"
-				IsThreeState="True" IsChecked="{Binding AutoFormatting}"
-				Margin="0,0,0,10"
-				Visibility="Collapsed"/>
-			<Grid
-				Visibility="{Binding Path=AllowPresets, Converter={StaticResource boolToVisibilityConverter}}">
-				<Grid.ColumnDefinitions>
-					<ColumnDefinition Width="Auto" />
-					<ColumnDefinition Width="*" />
-				</Grid.ColumnDefinitions>
-				
-				<Button Grid.Column="0" Content="{core:Localize CSharpBinding.Formatting.ResetTo}" Click="ResetButton_Click" />
-				<ComboBox Name="presetComboBox" Grid.Column="1" Margin="3,0,0,0" ItemsSource="{Binding Presets}" />
-			</Grid>
-		</StackPanel>
+		<Grid DockPanel.Dock="Top"
+		      Visibility="{Binding Path=OverrideGlobalIndentation, Converter={StaticResource boolToVisibilityConverter}}">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="Auto" />
+				<ColumnDefinition Width="Auto" />
+			</Grid.ColumnDefinitions>
+			<Grid.RowDefinitions>
+				<RowDefinition Height="Auto" />
+				<RowDefinition Height="Auto" />
+			</Grid.RowDefinitions>
+			
+			<Label Grid.Column="0" Grid.Row="0"
+			       Content="{core:Localize Dialog.Options.IDEOptions.TextEditor.Behaviour.IndentLabel}" />
+			<ComboBox Grid.Column="1" Grid.Row="0" MinWidth="100" Margin="0,0,0,3"
+			          format:FormattingOptionBinding.Container="{Binding ElementName=CSharpFormattingEditor_Self, Path=OptionsContainer}">
+				<format:FormattingOptionBinding.FormattingOption>
+					<local:FormattingOption Option="IndentationSize" AlwaysAllowDefault="True" />
+				</format:FormattingOptionBinding.FormattingOption>
+			</ComboBox>
+			
+			<Label Grid.Column="0" Grid.Row="1"
+			       Content="{core:Localize Dialog.Options.IDEOptions.TextEditor.Behaviour.ConvertTabsToSpacesCheckBox}" />
+			<ComboBox Grid.Column="1" Grid.Row="1" MinWidth="100" Margin="0,0,0,3"
+			          format:FormattingOptionBinding.Container="{Binding ElementName=CSharpFormattingEditor_Self, Path=OptionsContainer}">
+				<format:FormattingOptionBinding.FormattingOption>
+					<local:FormattingOption Option="ConvertTabsToSpaces" AlwaysAllowDefault="True" />
+				</format:FormattingOptionBinding.FormattingOption>
+			</ComboBox>
+		</Grid>
+		
+		<Grid
+			Visibility="{Binding Path=AllowPresets, Converter={StaticResource boolToVisibilityConverter}}"
+			DockPanel.Dock="Top" Margin="0,5,0,0">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="Auto" />
+				<ColumnDefinition Width="*" />
+			</Grid.ColumnDefinitions>
+			
+			<Button Grid.Column="0" Content="{core:Localize CSharpBinding.Formatting.ResetTo}" Click="ResetButton_Click" />
+			<ComboBox Name="presetComboBox" Grid.Column="1" Margin="3,0,0,0" ItemsSource="{Binding Presets}" />
+		</Grid>
 		
 		<sd:RestrictDesiredSize Margin="0,4,0,0">
 			<ScrollViewer VerticalScrollBarVisibility="Auto">

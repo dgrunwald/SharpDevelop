@@ -35,15 +35,17 @@ namespace ICSharpCode.PackageManagement
 		ObservableCollection<RecentPackageInfo> recentPackages;
 		PackageRestoreConsent packageRestoreConsent;
 		
-		public PackageManagementOptions(Properties properties, ISettings settings)
+		public PackageManagementOptions(
+			Properties properties,
+			ISettingsProvider settingsProvider)
 		{
 			this.properties = properties;
-			registeredPackageSourceSettings = new RegisteredPackageSourceSettings(settings);
-			packageRestoreConsent = new PackageRestoreConsent(settings);
+			registeredPackageSourceSettings = new RegisteredPackageSourceSettings(settingsProvider);
+			packageRestoreConsent = new PackageRestoreConsent(settingsProvider.LoadSettings());
 		}
 		
 		public PackageManagementOptions(Properties properties)
-			: this(properties, Settings.LoadDefaultSettings(null, null, null))
+			: this(properties, new SettingsProvider())
 		{
 		}
 		
@@ -92,6 +94,11 @@ namespace ICSharpCode.PackageManagement
 		void RecentPackagesCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
 		{
 			properties.SetList(RecentPackagesPropertyName, recentPackages);
+		}
+		
+		public string GetCustomPackagesDirectory()
+		{
+			return registeredPackageSourceSettings.Settings.GetRepositoryPath();
 		}
 	}
 }

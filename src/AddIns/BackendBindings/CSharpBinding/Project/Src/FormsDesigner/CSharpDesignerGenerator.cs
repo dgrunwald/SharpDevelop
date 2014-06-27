@@ -35,6 +35,7 @@ using ICSharpCode.SharpDevelop;
 using ICSharpCode.SharpDevelop.Editor;
 using ICSharpCode.SharpDevelop.Project;
 using Microsoft.CSharp;
+using CSharpBinding.FormattingStrategy;
 using CSharpBinding.Parser;
 using CSharpBinding.Refactoring;
 
@@ -154,7 +155,8 @@ namespace CSharpBinding.FormsDesigner
 			
 			IDocument document = context.GetDocument(fileNameObj);
 			var ctx = SDRefactoringContext.Create(fileNameObj, document);
-			script = new DocumentScript(document, FormattingOptionsFactory.CreateSharpDevelop(), new TextEditorOptions());
+			var formattingOptions = CSharpFormattingPolicies.Instance.GetProjectOptions(compilation.GetProject());
+			script = new DocumentScript(document, formattingOptions.OptionsContainer.GetEffectiveOptions(), new TextEditorOptions());
 			scripts.Add(fileNameObj, script);
 			return script;
 		}
@@ -180,7 +182,7 @@ namespace CSharpBinding.FormsDesigner
 			
 			string newline = DocumentUtilities.GetLineTerminator(script.OriginalDocument, bodyRegion.BeginLine);
 			string indentation = DocumentUtilities.GetIndentation(script.OriginalDocument, bodyRegion.BeginLine);
-			string code = "{" + newline + GenerateInitializeComponents(codeMethod, indentation, newline) + indentation + "}";
+			string code = "{" + newline + GenerateInitializeComponents(codeMethod, indentation, newline) + newline + indentation + "}";
 			
 			int startOffset = script.GetCurrentOffset(bodyRegion.Begin);
 			int endOffset = script.GetCurrentOffset(bodyRegion.End);
@@ -282,7 +284,7 @@ namespace CSharpBinding.FormsDesigner
 				return false;
 			}
 			
-			return oldType.ReflectionName != newType.BaseType;
+			return oldType.GetDefinition().ReflectionName != newType.BaseType;
 		}
 		
 		string GenerateField(CodeMemberField newField)

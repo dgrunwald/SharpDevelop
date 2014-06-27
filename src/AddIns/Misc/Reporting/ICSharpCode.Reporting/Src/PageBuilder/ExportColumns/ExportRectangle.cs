@@ -18,33 +18,15 @@
 
 using System;
 using System.Drawing.Drawing2D;
-using ICSharpCode.Reporting.Exporter.Visitors;
-using ICSharpCode.Reporting.Interfaces.Export;
 
 namespace ICSharpCode.Reporting.PageBuilder.ExportColumns
 {
 	/// <summary>
 	/// Description of ExportRectangle.
 	/// </summary>
-	public class ExportRectangle:ExportColumn,IExportGraphics,IAcceptor
+	public class ExportRectangle:GraphicsContainer,IExportGraphics
 	{
-		public ExportRectangle()
-		{
-		}
-		
-		
-		public void Accept(IVisitor visitor)
-		{
-			visitor.Visit(this);
-		}
-		
-		
-		public override ICSharpCode.Reporting.Arrange.IMeasurementStrategy MeasurementStrategy()
-		{
-			throw new NotImplementedException();
-		}
-		
-		public int Thickness {get;set;}
+		public int CornerRadius { get; set; }
 		
 		public DashStyle DashStyle {get;set;}
 		

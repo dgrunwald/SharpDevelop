@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Windows.Media;
+using System.Windows.Threading;
 using ICSharpCode.AvalonEdit.Document;
 using ICSharpCode.AvalonEdit.Rendering;
 using ICSharpCode.NRefactory;
@@ -43,6 +44,7 @@ namespace CSharpBinding
 
 		ISymbolReference currentSymbolReference;
 		CancellationTokenSource caretMovementTokenSource;
+		DispatcherTimer timer;
 		List<ISegment> currentReferences;
 
 		Pen borderPen;
@@ -63,7 +65,13 @@ namespace CSharpBinding
 			this.backgroundBrush = new SolidColorBrush(DefaultFillColor);
 			this.borderPen.Freeze();
 			this.backgroundBrush.Freeze();
+			this.timer = new DispatcherTimer {
+				Interval = TimeSpan.FromMilliseconds(500)
+			};
+			timer.Tick += (sender, e) => ResolveAtCaret();
+				
 			editor.Caret.LocationChanged += CaretLocationChanged;
+			editor.Document.ChangeCompleted += DocumentChanged;
 			textView.VisualLinesChanged += VisualLinesChanged;
 			SD.ParserService.ParseInformationUpdated += ParseInformationUpdated;
 			SD.ParserService.LoadSolutionProjectsThread.Finished += LoadSolutionProjectsThreadFinished;
@@ -72,18 +80,17 @@ namespace CSharpBinding
 
 		public void Dispose()
 		{
+			timer.Stop();
 			this.textView.BackgroundRenderers.Remove(this);
 			editor.Caret.LocationChanged -= CaretLocationChanged;
+			editor.Document.ChangeCompleted -= DocumentChanged;
+			textView.VisualLinesChanged -= VisualLinesChanged;
+			SD.ParserService.ParseInformationUpdated -= ParseInformationUpdated;
+			SD.ParserService.LoadSolutionProjectsThread.Finished -= LoadSolutionProjectsThreadFinished;
 		}
 
 		public void Draw(TextView textView, DrawingContext drawingContext)
 		{
-			var codeEditorOptions = editor.Options as ICodeEditorOptions;
-			if ((codeEditorOptions != null) && !codeEditorOptions.HighlightSymbol) {
-				// User has disabled highlighting of symbols
-				return;
-			}
-			
 			if (currentReferences == null) {
 				if (textView.VisualLines.Count == 0)
 					return;
@@ -123,22 +130,59 @@ namespace CSharpBinding
 				return;
 			currentReferences = null;
 			textView.InvalidateLayer(KnownLayer.Selection);
-
 		}
 
 		void LoadSolutionProjectsThreadFinished(object sender, EventArgs e)
 		{
-			currentReferences = null;
-			textView.InvalidateLayer(KnownLayer.Selection);
+			StartTimer();
 		}
 
 		void CaretLocationChanged(object sender, EventArgs e)
 		{
+			if (currentReferences != null) {
+				int caretOffset = editor.Caret.Offset;
+				if (!currentReferences.Any(r => r.Offset <= caretOffset && caretOffset <= r.EndOffset)) {
+					// If the caret moved outside any highlighted identifier, immediately clear the highlight
+					// as the caret is not on the same symbol as before
+					SetCurrentSymbol(null);
+				}
+			}
+			StartTimer();
+		}
+		
+		void DocumentChanged(object sender, EventArgs e)
+		{
+			// If the document has changed, the current symbol likely also has changed (most edits are at the caret position),
+			// so immediately clear the highlighting.
+			SetCurrentSymbol(null);
+			StartTimer();
+		}
+		
+		void StartTimer()
+		{
 			if (caretMovementTokenSource != null)
 				caretMovementTokenSource.Cancel();
+			timer.Stop();
+			
+			var codeEditorOptions = editor.Options as ICodeEditorOptions;
+			if (codeEditorOptions == null || codeEditorOptions.HighlightSymbol) {
+				// If symbol highlighting is enabled
+				timer.Start();
+			} else {
+				// Clear highlighting if its disabled
+				SetCurrentSymbol(null);
+			}
+		}
+		
+		async void ResolveAtCaret()
+		{
+			timer.Stop();
 			caretMovementTokenSource = new CancellationTokenSource();
-			var rr = SD.ParserService.Resolve(editor.FileName, editor.Caret.Location, editor.Document, cancellationToken: caretMovementTokenSource.Token);
-			SetCurrentSymbol(rr.GetSymbol());
+			try {
+				var rr = await SD.ParserService.ResolveAsync(editor.FileName, editor.Caret.Location, editor.Document, cancellationToken: caretMovementTokenSource.Token);
+				SetCurrentSymbol(rr.GetSymbol());
+			} catch (OperationCanceledException) {
+			}
 		}
 
 		IResolveVisitorNavigator InitNavigator(ICompilation compilation)
@@ -185,7 +229,7 @@ namespace CSharpBinding
 		void VisitVisibleNodes(AstNode node, IResolveVisitorNavigator currentNavigator, CSharpAstResolver resolver, int start, int end)
 		{
 			if (!CSharpAstResolver.IsUnresolvableNode(node))
-				currentNavigator.Resolved(node, resolver.Resolve(node, caretMovementTokenSource.Token));
+				currentNavigator.Resolved(node, resolver.Resolve(node));
 			for (var child = node.FirstChild; child != null; child = child.NextSibling) {
 				if (child.StartLocation.Line <= end && child.EndLocation.Line >= start)
 					VisitVisibleNodes(child, currentNavigator, resolver, start, end);

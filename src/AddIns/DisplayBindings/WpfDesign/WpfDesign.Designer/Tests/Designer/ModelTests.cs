@@ -149,6 +149,176 @@ namespace ICSharpCode.WpfDesign.Tests.Designer
 			AssertLog("");
 		}
 		
+		[Test]
+		public void UndoRedoImplicitList()
+		{
+			UndoRedoListInternal(false);
+		}
+		
+		[Test]
+		public void UndoRedoExplicitList()
+		{
+			UndoRedoListInternal(true);
+		}
+
+		void UndoRedoListInternal(bool useExplicitList)
+		{
+			DesignItem button = CreateCanvasContext("<Button/>");
+			UndoService s = button.Context.Services.GetService<UndoService>();
+			IComponentService component = button.Context.Services.Component;
+			string expectedXamlWithList;
+			DesignItemProperty otherListProp;
+			
+			Assert.IsFalse(s.CanUndo);
+			Assert.IsFalse(s.CanRedo);
+			
+			using (ChangeGroup g = button.OpenGroup("UndoRedoListInternal test")) {
+				DesignItem containerItem = component.RegisterComponentForDesigner(new ICSharpCode.WpfDesign.Tests.XamlDom.ExampleClassContainer());
+				
+				otherListProp = containerItem.Properties["OtherList"];
+				
+				if(useExplicitList) {
+					otherListProp.SetValue(new ICSharpCode.WpfDesign.Tests.XamlDom.ExampleClassList());
+					
+					expectedXamlWithList = @"<Button>
+  <Button.Tag>
+    <Controls0:ExampleClassContainer>
+      <Controls0:ExampleClassContainer.OtherList>
+        <Controls0:ExampleClassList>
+          <Controls0:ExampleClass StringProp=""String value"" />
+        </Controls0:ExampleClassList>
+      </Controls0:ExampleClassContainer.OtherList>
+    </Controls0:ExampleClassContainer>
+  </Button.Tag>
+</Button>";
+				} else {
+					expectedXamlWithList = @"<Button>
+  <Button.Tag>
+    <Controls0:ExampleClassContainer>
+      <Controls0:ExampleClassContainer.OtherList>
+        <Controls0:ExampleClass StringProp=""String value"" />
+      </Controls0:ExampleClassContainer.OtherList>
+    </Controls0:ExampleClassContainer>
+  </Button.Tag>
+</Button>";
+				}
+				
+				DesignItem exampleClassItem = component.RegisterComponentForDesigner(new ICSharpCode.WpfDesign.Tests.XamlDom.ExampleClass());
+				exampleClassItem.Properties["StringProp"].SetValue("String value");
+				otherListProp.CollectionElements.Add(exampleClassItem);
+				
+				button.Properties["Tag"].SetValue(containerItem);
+				g.Commit();
+			}
+			
+			Assert.IsTrue(s.CanUndo);
+			Assert.IsFalse(s.CanRedo);
+			AssertCanvasDesignerOutput(expectedXamlWithList, button.Context, "xmlns:Controls0=\"" + ICSharpCode.WpfDesign.Tests.XamlDom.XamlTypeFinderTests.XamlDomTestsNamespace + "\"");
+			
+			otherListProp = button.Properties["Tag"].Value.Properties["OtherList"];
+			Assert.IsTrue(((ICSharpCode.WpfDesign.Tests.XamlDom.ExampleClassList)otherListProp.ValueOnInstance).Count == otherListProp.CollectionElements.Count);
+			
+			s.Undo();
+			Assert.IsFalse(s.CanUndo);
+			Assert.IsTrue(s.CanRedo);
+			AssertCanvasDesignerOutput("<Button>\n</Button>", button.Context, "xmlns:Controls0=\"" + ICSharpCode.WpfDesign.Tests.XamlDom.XamlTypeFinderTests.XamlDomTestsNamespace + "\"");
+			
+			s.Redo();
+			Assert.IsTrue(s.CanUndo);
+			Assert.IsFalse(s.CanRedo);
+			AssertCanvasDesignerOutput(expectedXamlWithList, button.Context, "xmlns:Controls0=\"" + ICSharpCode.WpfDesign.Tests.XamlDom.XamlTypeFinderTests.XamlDomTestsNamespace + "\"");
+			
+			otherListProp = button.Properties["Tag"].Value.Properties["OtherList"];
+			Assert.IsTrue(((ICSharpCode.WpfDesign.Tests.XamlDom.ExampleClassList)otherListProp.ValueOnInstance).Count == otherListProp.CollectionElements.Count);
+			
+			AssertLog("");
+		}
+		
+		[Test]
+		public void UndoRedoImplicitDictionary()
+		{
+			UndoRedoDictionaryInternal(false);
+		}
+		
+		[Test]
+		public void UndoRedoExplicitDictionary()
+		{
+			UndoRedoDictionaryInternal(true);
+		}
+
+		void UndoRedoDictionaryInternal(bool useExplicitDictionary)
+		{
+			DesignItem button = CreateCanvasContext("<Button/>");
+			UndoService s = button.Context.Services.GetService<UndoService>();
+			IComponentService component = button.Context.Services.Component;
+			string expectedXamlWithDictionary;
+			DesignItemProperty dictionaryProp;
+			
+			Assert.IsFalse(s.CanUndo);
+			Assert.IsFalse(s.CanRedo);
+			
+			using (ChangeGroup g = button.OpenGroup("UndoRedoDictionaryInternal test")) {
+				DesignItem containerItem = component.RegisterComponentForDesigner(new ICSharpCode.WpfDesign.Tests.XamlDom.ExampleClassContainer());
+				
+				dictionaryProp = containerItem.Properties["Dictionary"];
+				
+				if(useExplicitDictionary) {
+					dictionaryProp.SetValue(new ICSharpCode.WpfDesign.Tests.XamlDom.ExampleClassDictionary());
+					
+					expectedXamlWithDictionary = @"<Button>
+  <Button.Tag>
+    <Controls0:ExampleClassContainer>
+      <Controls0:ExampleClassContainer.Dictionary>
+        <Controls0:ExampleClassDictionary>
+          <Controls0:ExampleClass x:Key=""testKey"" StringProp=""String value"" />
+        </Controls0:ExampleClassDictionary>
+      </Controls0:ExampleClassContainer.Dictionary>
+    </Controls0:ExampleClassContainer>
+  </Button.Tag>
+</Button>";
+				} else {
+					expectedXamlWithDictionary = @"<Button>
+  <Button.Tag>
+    <Controls0:ExampleClassContainer>
+      <Controls0:ExampleClassContainer.Dictionary>
+        <Controls0:ExampleClass x:Key=""testKey"" StringProp=""String value"" />
+      </Controls0:ExampleClassContainer.Dictionary>
+    </Controls0:ExampleClassContainer>
+  </Button.Tag>
+</Button>";
+				}
+				
+				DesignItem exampleClassItem = component.RegisterComponentForDesigner(new ICSharpCode.WpfDesign.Tests.XamlDom.ExampleClass());
+				exampleClassItem.Key = "testKey";
+				exampleClassItem.Properties["StringProp"].SetValue("String value");
+				dictionaryProp.CollectionElements.Add(exampleClassItem);
+				
+				button.Properties["Tag"].SetValue(containerItem);
+				g.Commit();
+			}
+			
+			Assert.IsTrue(s.CanUndo);
+			Assert.IsFalse(s.CanRedo);
+			AssertCanvasDesignerOutput(expectedXamlWithDictionary, button.Context, "xmlns:Controls0=\"" + ICSharpCode.WpfDesign.Tests.XamlDom.XamlTypeFinderTests.XamlDomTestsNamespace + "\"");
+			
+			dictionaryProp = button.Properties["Tag"].Value.Properties["Dictionary"];
+			Assert.IsTrue(((ICSharpCode.WpfDesign.Tests.XamlDom.ExampleClassDictionary)dictionaryProp.ValueOnInstance).Count == dictionaryProp.CollectionElements.Count);
+			
+			s.Undo();
+			Assert.IsFalse(s.CanUndo);
+			Assert.IsTrue(s.CanRedo);
+			AssertCanvasDesignerOutput("<Button>\n</Button>", button.Context, "xmlns:Controls0=\"" + ICSharpCode.WpfDesign.Tests.XamlDom.XamlTypeFinderTests.XamlDomTestsNamespace + "\"");
+			
+			s.Redo();
+			Assert.IsTrue(s.CanUndo);
+			Assert.IsFalse(s.CanRedo);
+			AssertCanvasDesignerOutput(expectedXamlWithDictionary, button.Context, "xmlns:Controls0=\"" + ICSharpCode.WpfDesign.Tests.XamlDom.XamlTypeFinderTests.XamlDomTestsNamespace + "\"");
+			
+			dictionaryProp = button.Properties["Tag"].Value.Properties["Dictionary"];
+			Assert.IsTrue(((ICSharpCode.WpfDesign.Tests.XamlDom.ExampleClassDictionary)dictionaryProp.ValueOnInstance).Count == dictionaryProp.CollectionElements.Count);
+			
+			AssertLog("");
+		}
 		
 		[Test]
 		public void AddTextBoxToCanvas()
@@ -251,6 +421,89 @@ namespace ICSharpCode.WpfDesign.Tests.Designer
 			canvas.Properties["Children"].CollectionElements.Clear();
 			AssertCanvasDesignerOutput("<Canvas>\n" +
 			                           "</Canvas>", canvas.Context);
+			AssertLog("");
+		}
+		
+		[Test]
+		public void ClearExplicitList()
+		{
+			DesignItem button = CreateCanvasContext("<Button/>");
+			
+			button.Properties["Tag"].SetValue(new ICSharpCode.WpfDesign.Tests.XamlDom.ExampleClassContainer());
+			var containerItem = button.Properties["Tag"].Value;
+			var otherListProp = containerItem.Properties["OtherList"];
+			otherListProp.SetValue(new ICSharpCode.WpfDesign.Tests.XamlDom.ExampleClassList());
+			
+			DesignItem exampleClassItem = button.Context.Services.Component.RegisterComponentForDesigner(new ICSharpCode.WpfDesign.Tests.XamlDom.ExampleClass());
+			exampleClassItem.Properties["StringProp"].SetValue("String value");
+			otherListProp.CollectionElements.Add(exampleClassItem);
+			
+			var listInstance = (ICSharpCode.WpfDesign.Tests.XamlDom.ExampleClassList)otherListProp.ValueOnInstance;
+			Assert.AreEqual(1, listInstance.Count);
+			Assert.AreEqual(1, otherListProp.CollectionElements.Count);
+			
+			button.Properties["Tag"].Value.Properties["OtherList"].CollectionElements.Clear();
+			
+			Assert.AreEqual(0, listInstance.Count);
+			Assert.AreEqual(0, otherListProp.CollectionElements.Count);
+
+			AssertCanvasDesignerOutput(@"<Button>
+  <Button.Tag>
+    <Controls0:ExampleClassContainer>
+      <Controls0:ExampleClassContainer.OtherList>
+        <Controls0:ExampleClassList>
+        </Controls0:ExampleClassList>
+      </Controls0:ExampleClassContainer.OtherList>
+    </Controls0:ExampleClassContainer>
+  </Button.Tag>
+</Button>", button.Context, "xmlns:Controls0=\"" + ICSharpCode.WpfDesign.Tests.XamlDom.XamlTypeFinderTests.XamlDomTestsNamespace + "\"");
+			AssertLog("");
+		}
+		
+		[Test]
+		public void ClearExplicitDictionary()
+		{
+			DesignItem button = CreateCanvasContext("<Button/>");
+			
+			button.Properties["Tag"].SetValue(new ICSharpCode.WpfDesign.Tests.XamlDom.ExampleClassContainer());
+			var containerItem = button.Properties["Tag"].Value;
+			var dictionaryProp = containerItem.Properties["Dictionary"];
+			dictionaryProp.SetValue(new ICSharpCode.WpfDesign.Tests.XamlDom.ExampleClassDictionary());
+			
+			DesignItem exampleClassItem = button.Context.Services.Component.RegisterComponentForDesigner(new ICSharpCode.WpfDesign.Tests.XamlDom.ExampleClass());
+			exampleClassItem.Key = "testKey";
+			exampleClassItem.Properties["StringProp"].SetValue("String value");
+			dictionaryProp.CollectionElements.Add(exampleClassItem);
+			
+			var dictionaryInstance = (ICSharpCode.WpfDesign.Tests.XamlDom.ExampleClassDictionary)dictionaryProp.ValueOnInstance;
+			Assert.AreEqual(1, dictionaryInstance.Count);
+			Assert.AreEqual(1, dictionaryProp.CollectionElements.Count);
+			
+			button.Properties["Tag"].Value.Properties["Dictionary"].CollectionElements.Clear();
+			
+			Assert.AreEqual(0, dictionaryInstance.Count);
+			Assert.AreEqual(0, dictionaryProp.CollectionElements.Count);
+			
+			dictionaryProp.CollectionElements.Add(exampleClassItem);
+			
+			Assert.AreEqual(1, dictionaryInstance.Count);
+			Assert.AreEqual(1, dictionaryProp.CollectionElements.Count);
+			
+			button.Properties["Tag"].Value.Properties["Dictionary"].CollectionElements.Clear();
+			
+			Assert.AreEqual(0, dictionaryInstance.Count);
+			Assert.AreEqual(0, dictionaryProp.CollectionElements.Count);
+
+			AssertCanvasDesignerOutput(@"<Button>
+  <Button.Tag>
+    <Controls0:ExampleClassContainer>
+      <Controls0:ExampleClassContainer.Dictionary>
+        <Controls0:ExampleClassDictionary>
+        </Controls0:ExampleClassDictionary>
+      </Controls0:ExampleClassContainer.Dictionary>
+    </Controls0:ExampleClassContainer>
+  </Button.Tag>
+</Button>", button.Context, "xmlns:Controls0=\"" + ICSharpCode.WpfDesign.Tests.XamlDom.XamlTypeFinderTests.XamlDomTestsNamespace + "\"");
 			AssertLog("");
 		}
 		
@@ -387,6 +640,34 @@ namespace ICSharpCode.WpfDesign.Tests.Designer
 		}
 		
 		[Test]
+		public void AddStaticResourceWhereResourceOnSameElement()
+		{
+			DesignItem button = CreateCanvasContext("<Button/>");
+			DesignItem canvas = button.Parent;
+			
+			DesignItemProperty resProp = button.Properties.GetProperty("Resources");
+			Assert.IsTrue(resProp.IsCollection);
+			DesignItem exampleClassItem = canvas.Services.Component.RegisterComponentForDesigner(new ExampleClass());
+			exampleClassItem.Key = "res1";
+			resProp.CollectionElements.Add(exampleClassItem);
+			
+			button.Properties["Tag"].SetValue(new StaticResourceExtension());
+			button.Properties["Tag"].Value.Properties["ResourceKey"].SetValue("res1");
+			
+			string expectedXaml = "<Button>\n" +
+								  "  <Button.Resources>\n" +
+								  "    <t:ExampleClass x:Key=\"res1\" />\n" +
+								  "  </Button.Resources>\n" +
+								  "  <Button.Tag>\n" +
+								  "    <StaticResourceExtension ResourceKey=\"res1\" />\n" +
+								  "  </Button.Tag>\n" +
+								  "</Button>";
+			
+			AssertCanvasDesignerOutput(expectedXaml, button.Context);
+			AssertLog("");
+		}
+		
+		[Test]
 		public void AddBrushAsResource()
 		{
 			DesignItem checkBox = CreateCanvasContext("<CheckBox/>");
@@ -414,31 +695,91 @@ namespace ICSharpCode.WpfDesign.Tests.Designer
 			AssertLog("");
 		}
 		
-		[Test]
-		public void AddStringAsResource()
+		public void AddNativeTypeAsResource(object component, string expectedXamlValue)
+		{
+			AddTypeAsResource(component, expectedXamlValue, "Controls0:", new string[] { "xmlns:Controls0=\"clr-namespace:System;assembly=mscorlib\""} );
+		}
+		
+		public void AddTypeAsResource(object component, string expectedXamlValue, string typePrefix, String[] additionalXmlns)
 		{
 			DesignItem textBlock = CreateCanvasContext("<TextBlock/>");
 			DesignItem canvas = textBlock.Parent;
 			
 			DesignItemProperty canvasResources = canvas.Properties.GetProperty("Resources");
 			
-			DesignItem str = canvas.Services.Component.RegisterComponentForDesigner("stringresource 1");
-			str.Key = "str1";
+			DesignItem componentItem = canvas.Services.Component.RegisterComponentForDesigner(component);
+			componentItem.Key = "res1";
 			
 			Assert.IsTrue(canvasResources.IsCollection);
-			canvasResources.CollectionElements.Add(str);
+			canvasResources.CollectionElements.Add(componentItem);
 			
-			textBlock.Properties[TextBlock.TextProperty].SetValue(new StaticResourceExtension());
-			DesignItemProperty prop = textBlock.Properties[TextBlock.TextProperty];
-			prop.Value.Properties["ResourceKey"].SetValue("str1");
+			DesignItemProperty prop = textBlock.Properties[TextBlock.TagProperty];
+			prop.SetValue(new StaticResourceExtension());
+			prop.Value.Properties["ResourceKey"].SetValue("res1");
+			
+			string typeName = component.GetType().Name;
 			
 			string expectedXaml = "<Canvas.Resources>\n" +
-								  "  <Controls0:String x:Key=\"str1\">stringresource 1</Controls0:String>\n" +
+								  "  <" + typePrefix + typeName + " x:Key=\"res1\">" + expectedXamlValue + "</" + typePrefix + typeName + ">\n" +
 								  "</Canvas.Resources>\n" +
-								  "<TextBlock Text=\"{StaticResource ResourceKey=str1}\" />";
+								  "<TextBlock Tag=\"{StaticResource ResourceKey=res1}\" />";
 			
-			AssertCanvasDesignerOutput(expectedXaml, textBlock.Context, "xmlns:Controls0=\"clr-namespace:System;assembly=mscorlib\"");
+			AssertCanvasDesignerOutput(expectedXaml, textBlock.Context, additionalXmlns);
 			AssertLog("");
+		}
+		
+		[Test]
+		public void TestTextValue()
+		{
+			// An invalid path (in this case containing a question mark), or a path to a file that does not exist, will give the same result.
+			// It will cause the typeconverter to fail and no value can be get from neither ValueOnInstance nor Value from the Image.Source DesignItemProperty.
+			// TextValue was added to have a way of getting the xaml value.
+			string sourceTextValue = "file:///C:/Folder/image?.bmp";
+			
+			string xaml = "<Image Source=\"" + sourceTextValue + "\" />";
+			DesignItem image = CreateCanvasContext(xaml);
+			
+			var sourceProp = image.Properties[Image.SourceProperty];
+			
+			Assert.IsNull(sourceProp.ValueOnInstance);
+			Assert.IsNull(sourceProp.Value);
+			Assert.IsNotNull(sourceProp.TextValue);
+			Assert.AreEqual(sourceTextValue, sourceProp.TextValue);
+			
+			string expectedXaml = xaml;
+			AssertCanvasDesignerOutput(expectedXaml, image.Context);
+			AssertLog("");
+		}
+		
+		[Test]
+		public void AddStringAsResource()
+		{
+			AddNativeTypeAsResource("stringresource 1", "stringresource 1");
+		}
+		
+		[Test]
+		public void AddDoubleAsResource()
+		{
+			AddNativeTypeAsResource(0.0123456789d, "0.0123456789");
+		}
+		
+		[Test]
+		public void AddInt32AsResource()
+		{
+			const int i = 123;
+			AddNativeTypeAsResource(i, "123");
+		}
+		
+		[Test]
+		public void AddWpfEnumAsResource()
+		{
+			AddTypeAsResource(VerticalAlignment.Center, "Center", "", new string[0]);
+		}
+		
+		[Test]
+		public void AddCustomEnumAsResource()
+		{
+			AddTypeAsResource(MyEnum.One, "One", "t:", new string[0]);
 		}
 	}
 	
@@ -463,5 +804,10 @@ namespace ICSharpCode.WpfDesign.Tests.Designer
 			get { return stringProp; }
 			set { stringProp = value; }
 		}
+	}
+	
+	public enum MyEnum
+	{
+		One, Two
 	}
 }

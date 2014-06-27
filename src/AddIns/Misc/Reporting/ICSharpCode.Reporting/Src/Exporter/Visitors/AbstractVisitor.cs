@@ -20,6 +20,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.Drawing;
 
+using ICSharpCode.Reporting.Interfaces.Export;
 using ICSharpCode.Reporting.PageBuilder.ExportColumns;
 
 namespace ICSharpCode.Reporting.Exporter.Visitors
@@ -58,22 +59,21 @@ namespace ICSharpCode.Reporting.Exporter.Visitors
 		}
 		
 		
-		public virtual void Visit(ExportText exportColumn)
-		{
+		public virtual void Visit(ExportText exportColumn){
 		}
 		
-		
-		public virtual void Visit(ExportLine exportGraphics)
-		{
-		}
-		
-		public virtual void Visit (ExportRectangle exportRectangle) {
+		public virtual void Visit (ExportRow exportRow) {
 			
 		}
 		
+		public virtual void Visit(ExportLine exportGraphics){
+		}
 		
-		public virtual void Visit (ExportCircle exportCircle) {
-			
+		public virtual void Visit (ExportRectangle exportRectangle) {	
+		}
+		
+		
+		public virtual void Visit (ExportCircle exportCircle) {	
 		}
 		
 		
@@ -85,5 +85,13 @@ namespace ICSharpCode.Reporting.Exporter.Visitors
 		protected Collection<ExportPage> Pages {get; private set;}
 		
 		
+		static protected bool IsContainer (IExportColumn column) {
+			return (column is ExportContainer)|| (column is GraphicsContainer);
+		}
+		
+		
+		static protected bool IsGraphicsContainer (IExportColumn column) {
+			return column is GraphicsContainer;
+		}
 	}
 }

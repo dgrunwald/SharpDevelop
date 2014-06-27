@@ -108,6 +108,7 @@
     <Compile Include="Src\Helpers\CodeElementsExtensions.cs" />
     <Compile Include="Src\Helpers\ExceptionThrowingPackageActionRunner.cs" />
     <Compile Include="Src\Helpers\ExceptionThrowingProcessPackageAction.cs" />
+    <Compile Include="Src\Helpers\FakeCmdletLogger.cs" />
     <Compile Include="Src\Helpers\FakeCodeGenerator.cs" />
     <Compile Include="Src\Helpers\FakeOperationAwarePackageRepository.cs" />
     <Compile Include="Src\Helpers\FakeSelectProjectsService.cs" />
@@ -119,12 +120,10 @@
     <Compile Include="Src\Helpers\PropertiesHelper.cs" />
     <Compile Include="Src\Helpers\SelectedProjectCollectionAssert.cs" />
     <Compile Include="Src\Helpers\SolutionHelper.cs" />
-    <Compile Include="Src\Helpers\TestableAvailablepackagesViewModel.cs" />
     <Compile Include="Src\Helpers\TestableInstalledPackageViewModel.cs" />
     <Compile Include="Src\Helpers\TestablePackageFromRepository.cs" />
     <Compile Include="Src\Helpers\TestablePackagesViewModels.cs" />
     <Compile Include="Src\Helpers\TestableProjectBehaviour.cs" />
-    <Compile Include="Src\Helpers\TestableRecentPackagesViewModel.cs" />
     <Compile Include="Src\Helpers\TestableSelectedProjectsForUpdatedPackages.cs" />
     <Compile Include="Src\Helpers\TestableSolutionSnapshot.cs" />
     <Compile Include="Src\Helpers\TestableUpdatePackagesAction.cs" />
@@ -178,7 +177,6 @@
     <Compile Include="Src\Helpers\FakePowerShellDetection.cs" />
     <Compile Include="Src\Helpers\FakePowerShellSession.cs" />
     <Compile Include="Src\Helpers\FakePropertyService.cs" />
-    <Compile Include="Src\Helpers\FakeSettingsFactory.cs" />
     <Compile Include="Src\Helpers\FakeSolutionPackageRepository.cs" />
     <Compile Include="Src\Helpers\FakeTextEditorOptions.cs" />
     <Compile Include="Src\Helpers\ProjectItemCollectionAssert.cs" />
@@ -197,6 +195,8 @@
     <Compile Include="Src\Scripting\ConsoleHostFileConflictResolverTests.cs" />
     <Compile Include="Src\Scripting\MSBuildProjectImportsMergerTests.cs" />
     <Compile Include="Src\Scripting\MSBuildProjectPropertiesMergerTests.cs" />
+    <Compile Include="Src\Scripting\PackageManagementConsoleHostLoggerTests.cs" />
+    <Compile Include="Src\SettingsProviderTests.cs" />
     <Compile Include="Src\UpdatedPackagesTests.cs" />
     <Compile Include="Src\UpdatePackagesActionTests.cs" />
     <Compile Include="Src\UpdateSolutionPackagesActionTests.cs" />

@@ -58,6 +58,7 @@
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Management.Automation, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xaml">
       <RequiredTargetFramework>4.0</RequiredTargetFramework>
@@ -154,6 +155,7 @@
     <Compile Include="Src\InstalledPackagesViewModel.cs" />
     <Compile Include="Src\IPackageRepositoryFactoryEvents.cs" />
     <Compile Include="Src\IPackageViewModelParent.cs" />
+    <Compile Include="Src\ISettingsProvider.cs" />
     <Compile Include="Src\IUpdatePackagesAction.cs" />
     <Compile Include="Src\IPackageExtensions.cs" />
     <Compile Include="Src\IPackageAction.cs" />
@@ -219,7 +221,6 @@
     <Compile Include="Src\IPackageReferenceInstaller.cs" />
     <Compile Include="Src\IPackageReferencesForProject.cs" />
     <Compile Include="Src\IPropertyService.cs" />
-    <Compile Include="Src\ISettingsFactory.cs" />
     <Compile Include="Src\IThreadSafePackageManagementEvents.cs" />
     <Compile Include="Src\ManagePackagesUserPrompts.cs" />
     <Compile Include="Src\ManagePackagesViewTitle.cs" />
@@ -243,6 +244,7 @@
     <Compile Include="Src\Scripting\ConsoleHostFileConflictResolver.cs" />
     <Compile Include="Src\Scripting\FileConflictAction.cs" />
     <Compile Include="Src\Scripting\GlobalMSBuildProjectCollection.cs" />
+    <Compile Include="Src\Scripting\ICmdletLogger.cs" />
     <Compile Include="Src\Scripting\IConsoleHostFileConflictResolver.cs" />
     <Compile Include="Src\Scripting\IGlobalMSBuildProjectCollection.cs" />
     <Compile Include="Src\Scripting\MSBuildProjectImportsMerger.cs" />
@@ -250,8 +252,10 @@
     <Compile Include="Src\Scripting\MSBuildProjectPropertiesMerger.cs" />
     <Compile Include="Src\Scripting\MSBuildProjectPropertiesMergeResult.cs" />
     <Compile Include="Src\Scripting\NullGlobalMSBuildProjectCollection.cs" />
+    <Compile Include="Src\Scripting\PackageManagementConsoleHostLogger.cs" />
     <Compile Include="Src\Scripting\RunAllProjectPackageScriptsAction.cs" />
     <Compile Include="Src\ServiceWithWorkbenchOwner.cs" />
+    <Compile Include="Src\SettingsProvider.cs" />
     <Compile Include="Src\SharpDevelopCredentialProvider.cs" />
     <Compile Include="Src\SharpDevelopHttpUserAgent.cs" />
     <Compile Include="Src\ThreadSafeCodeGenerator.cs" />
@@ -400,7 +404,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Src\SelectProjectsViewModel.cs" />
-    <Compile Include="Src\SettingsFactory.cs" />
     <Compile Include="Src\SolutionPackageRepositoryFactory.cs" />
     <Compile Include="Src\SolutionPackageRepositoryPath.cs" />
     <Compile Include="Src\PackageSourceConverter.cs" />

@@ -35,6 +35,10 @@ namespace ICSharpCode.WpfDesign.Designer
 	public sealed class DesignPanel : Decorator, IDesignPanel, INotifyPropertyChanged
 	{
 		#region Hit Testing
+		
+		private List<DependencyObject> hitTestElements = new List<DependencyObject>();
+		private DependencyObject lastElement;
+		
 		/// <summary>
 		/// this element is always hit (unless HitTestVisible is set to false)
 		/// </summary>
@@ -54,7 +58,7 @@ namespace ICSharpCode.WpfDesign.Designer
 		void RunHitTest(Visual reference, Point point, HitTestFilterCallback filterCallback, HitTestResultCallback resultCallback)
 		{
 			VisualTreeHelper.HitTest(reference, filterCallback, resultCallback,
-			                         new PointHitTestParameters(point));
+				new PointHitTestParameters(point));
 		}
 		
 		HitTestFilterBehavior FilterHitTestInvisibleElements(DependencyObject potentialHitTestTarget)
@@ -70,9 +74,10 @@ namespace ICSharpCode.WpfDesign.Designer
 			
 				if (designItem != null && designItem.IsDesignTimeLocked) {
 					return HitTestFilterBehavior.ContinueSkipSelfAndChildren;
+				}			
 			}
 			
-			}
+			hitTestElements.Add(element);
 						
 			return HitTestFilterBehavior.Continue;
 		}
@@ -80,14 +85,17 @@ namespace ICSharpCode.WpfDesign.Designer
 		/// <summary>
 		/// Performs a custom hit testing lookup for the specified mouse event args.
 		/// </summary>
-		public DesignPanelHitTestResult HitTest(Point mousePosition, bool testAdorners, bool testDesignSurface)
+		public DesignPanelHitTestResult HitTest(Point mousePosition, bool testAdorners, bool testDesignSurface, HitTestType hitTestType)
 		{
+			hitTestElements.Clear();
+			
 			DesignPanelHitTestResult result = DesignPanelHitTestResult.NoHit;
 			HitTest(mousePosition, testAdorners, testDesignSurface,
-			        delegate(DesignPanelHitTestResult r) {
-			        	result = r;
-			        	return false;
-			        });
+				delegate(DesignPanelHitTestResult r) {
+					result = r;
+					return false;
+				}, hitTestType);
+			
 			return result;
 		}
 		
@@ -95,7 +103,7 @@ namespace ICSharpCode.WpfDesign.Designer
 		/// Performs a hit test on the design surface, raising <paramref name="callback"/> for each match.
 		/// Hit testing continues while the callback returns true.
 		/// </summary>
-		public void HitTest(Point mousePosition, bool testAdorners, bool testDesignSurface, Predicate<DesignPanelHitTestResult> callback)
+		public void HitTest(Point mousePosition, bool testAdorners, bool testDesignSurface, Predicate<DesignPanelHitTestResult> callback, HitTestType hitTestType)
 		{
 			if (mousePosition.X < 0 || mousePosition.Y < 0 || mousePosition.X > this.RenderSize.Width || mousePosition.Y > this.RenderSize.Height) {
 				return;
@@ -103,6 +111,8 @@ namespace ICSharpCode.WpfDesign.Designer
 			// First try hit-testing on the adorner layer.
 			
 			bool continueHitTest = true;
+			
+			hitTestElements.Clear();
 			
 			if (testAdorners) {
 				RunHitTest(
@@ -135,6 +145,19 @@ namespace ICSharpCode.WpfDesign.Designer
 							
 							ViewService viewService = _context.Services.View;
 							DependencyObject obj = result.VisualHit;
+							
+							if (hitTestType == HitTestType.ElementSelection)
+							{
+								if (Keyboard.IsKeyDown(Key.LeftAlt))
+								if (lastElement != null && lastElement != _context.RootItem.Component &&
+									hitTestElements.Contains(lastElement))
+								{
+									var idx = hitTestElements.IndexOf(lastElement) - 1;
+									if (idx >= 0)
+										obj = hitTestElements[idx];
+								}
+							}
+							
 							while (obj != null) {
 								if ((customResult.ModelHit = viewService.GetModel(obj)) != null)
 									break;
@@ -143,6 +166,13 @@ namespace ICSharpCode.WpfDesign.Designer
 							if (customResult.ModelHit == null) {
 								customResult.ModelHit = _context.RootItem;
 							}
+							
+							if (hitTestType == HitTestType.ElementSelection)
+							{
+								lastElement = obj;
+							}
+							
+							
 							continueHitTest = callback(customResult);
 							return continueHitTest ? HitTestResultBehavior.Continue : HitTestResultBehavior.Stop;
 						} else {
@@ -223,7 +253,7 @@ namespace ICSharpCode.WpfDesign.Designer
 				}
 			}
 		}
-
+		
 		/// <summary>
 		/// Enables / Disables the Raster Placement
 		/// </summary>
@@ -319,48 +349,73 @@ namespace ICSharpCode.WpfDesign.Designer
 		}
 		#endregion
 		
+		PlacementOperation placementOp;
+		int dx = 0;
+		int dy = 0;
+		
 		private void DesignPanel_KeyUp(object sender, KeyEventArgs e)
 		{
 			if (e.Key == Key.Left || e.Key == Key.Right || e.Key == Key.Up || e.Key == Key.Down)
 			{
 				e.Handled = true;
+				
+				if (placementOp != null) {
+					placementOp.Commit();
+					placementOp = null;
+				}
 			}
 		}
 		
 		void DesignPanel_KeyDown(object sender, KeyEventArgs e)
 		{
-			if (e.Key == Key.Left || e.Key == Key.Right || e.Key == Key.Up || e.Key == Key.Down)
-			{
+			if (e.Key == Key.Left || e.Key == Key.Right || e.Key == Key.Up || e.Key == Key.Down) {
 				e.Handled = true;
-
-				var placementOp = PlacementOperation.Start(Context.Services.Selection.SelectedItems, PlacementType.Move);
-
-
-				var dx1 = (e.Key == Key.Left) ? Keyboard.IsKeyDown(Key.LeftShift) ? -10 : -1 : 0;
-				var dy1 = (e.Key == Key.Up) ? Keyboard.IsKeyDown(Key.LeftShift) ? -10 : -1 : 0;
-				var dx2 = (e.Key == Key.Right) ? Keyboard.IsKeyDown(Key.LeftShift) ? 10 : 1 : 0;
-				var dy2 = (e.Key == Key.Down) ? Keyboard.IsKeyDown(Key.LeftShift) ? 10 : 1 : 0;
+				
+				if (placementOp == null) {
+					dx = 0;
+					dy = 0;
+					placementOp = PlacementOperation.Start(Context.Services.Selection.SelectedItems, PlacementType.Move);
+				}
+				
+				switch (e.Key) {
+					case Key.Left:
+						dx += Keyboard.IsKeyDown(Key.LeftShift) ? -10 : -1;
+						break;
+					case Key.Up:
+						dy += Keyboard.IsKeyDown(Key.LeftShift) ? -10 : -1;
+						break;
+					case Key.Right:
+						dx += Keyboard.IsKeyDown(Key.LeftShift) ? 10 : 1;
+						break;
+					case Key.Down:
+						dy += Keyboard.IsKeyDown(Key.LeftShift) ? 10 : 1;
+						break;
+				}
+				
 				foreach (PlacementInformation info in placementOp.PlacedItems)
 				{
-					if (!Keyboard.IsKeyDown(Key.LeftCtrl))
-					{
-						info.Bounds = new Rect(info.OriginalBounds.Left + dx1 + dx2,
-						                       info.OriginalBounds.Top + dy1 + dy2,
-						                       info.OriginalBounds.Width,
-						                       info.OriginalBounds.Height);
+					var bounds = info.OriginalBounds;
+					
+					if (!Keyboard.IsKeyDown(Key.LeftCtrl)) {
+						info.Bounds = new Rect(bounds.Left + dx,
+							bounds.Top + dy,
+							bounds.Width,
+							bounds.Height);
+					} else {
+						info.Bounds = new Rect(bounds.Left,
+							bounds.Top,
+							bounds.Width + dx,
+							bounds.Height + dy);
 					}
-					else
-					{
-						info.Bounds = new Rect(info.OriginalBounds.Left,
-						                       info.OriginalBounds.Top,
-						                       info.OriginalBounds.Width + dx1 + dx2,
-						                       info.OriginalBounds.Height + dy1 + dy2);
-					}
-
 					placementOp.CurrentContainerBehavior.SetPosition(info);
 				}
 			}
 		}
+		
+		static bool IsPropertySet(UIElement element, DependencyProperty d)
+        {
+            return element.ReadLocalValue(d) != DependencyProperty.UnsetValue;
+        }
 		
 		protected override void OnQueryCursor(QueryCursorEventArgs e)
 		{

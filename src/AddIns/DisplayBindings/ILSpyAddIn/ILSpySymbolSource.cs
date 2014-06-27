@@ -16,7 +16,7 @@ namespace ICSharpCode.ILSpyAddIn
 	{
 		public bool Handles(IMethod method)
 		{
-			return true;
+			return !SD.Debugger.Options.EnableJustMyCode;
 		}
 		
 		public bool IsCompilerGenerated(IMethod method)
@@ -96,7 +96,7 @@ namespace ICSharpCode.ILSpyAddIn
 			var file = GetSymbols(method);
 			
 			if (file == null || !file.DebugSymbols.ContainsKey(id))
-				return null;
+				return Enumerable.Empty<ILLocalVariable>();
 			
 			var symbols = file.DebugSymbols[id];
 			

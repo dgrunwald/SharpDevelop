@@ -34,13 +34,15 @@ namespace CSharpBinding.FormattingStrategy
 	/// </summary>
 	internal class CSharpFormattingOptionsContainer : INotifyPropertyChanged
 	{
-		private const string AutoFormattingOptionName = "AutoFormatting"; 
+		private const string IndentationSizePropertyName = "IndentationSize";
+		private const string ConvertTabsToSpacesPropertyName = "ConvertTabsToSpaces";
 		
 		CSharpFormattingOptionsContainer parent;
 		CSharpFormattingOptions cachedOptions;
+		int? indentationSize;
+		bool? convertTabsToSpaces;
 		
 		readonly HashSet<string> activeOptions;
-		bool? autoFormatting;
 		
 		public CSharpFormattingOptionsContainer(CSharpFormattingOptionsContainer parent = null)
 			: this(parent, new HashSet<string>())
@@ -71,34 +73,6 @@ namespace CSharpBinding.FormattingStrategy
 			}
 		}
 		
-		public bool? AutoFormatting
-		{
-			get {
-				return autoFormatting;
-			}
-			set {
-				autoFormatting = value;
-				OnPropertyChanged("AutoFormatting");
-			}
-		}
-		
-		public bool EffectiveAutoFormatting
-		{
-			get {
-				// Get "effective" option, i.e. walk up all parents to find a defined value
-				CSharpFormattingOptionsContainer container = this;
-				do
-				{
-					if (container.autoFormatting.HasValue) {
-						return container.autoFormatting.Value;
-					}
-					container = container.parent;
-				} while (container != null);
-				
-				return true;
-			}
-		}
-		
 		/// <summary>
 		/// Resets all container's options to given <see cref="ICSharpCode.NRefactory.CSharp.CSharpFormattingOptions"/> instance.
 		/// </summary>
@@ -112,7 +86,6 @@ namespace CSharpBinding.FormattingStrategy
 				foreach (var property in typeof(CSharpFormattingOptions).GetProperties()) {
 					activeOptions.Add(property.Name);
 				}
-				autoFormatting = true;
 			}
 			OnPropertyChanged(null);
 		}
@@ -138,7 +111,8 @@ namespace CSharpBinding.FormattingStrategy
 			foreach (var activeOption in options.activeOptions)
 				activeOptions.Add(activeOption);
 			cachedOptions = options.cachedOptions.Clone();
-			autoFormatting = options.autoFormatting;
+			indentationSize = options.indentationSize;
+			convertTabsToSpaces = options.convertTabsToSpaces;
 			OnPropertyChanged(null);
 		}
 		
@@ -160,7 +134,14 @@ namespace CSharpBinding.FormattingStrategy
 			if ((e.PropertyName == "Parent") || (e.PropertyName == null)) {
 				// All properties might have changed -> update everything
 				cachedOptions = CreateCachedOptions();
-				OnPropertyChanged(e.PropertyName);
+			} else if (e.PropertyName == IndentationSizePropertyName) {
+				if (!indentationSize.HasValue) {
+					indentationSize = GetEffectiveIndentationSize();
+				}
+			} else if (e.PropertyName == ConvertTabsToSpacesPropertyName) {
+				if (!convertTabsToSpaces.HasValue) {
+					convertTabsToSpaces = GetEffectiveConvertTabsToSpaces();
+				}
 			} else {
 				// Some other property has changed, check if we have our own value for it
 				if (!activeOptions.Contains(e.PropertyName)) {
@@ -169,7 +150,6 @@ namespace CSharpBinding.FormattingStrategy
 					if (propertyInfo != null) {
 						var val = GetEffectiveOption(e.PropertyName);
 						propertyInfo.SetValue(cachedOptions, val);
-						OnPropertyChanged(e.PropertyName);
 					}
 				}
 			}
@@ -183,10 +163,18 @@ namespace CSharpBinding.FormattingStrategy
 		public object GetOption(string option)
 		{
 			// Run up the hierarchy until we find a defined value for property
-			if (activeOptions.Contains(option)) {
-				PropertyInfo propertyInfo = typeof(CSharpFormattingOptions).GetProperty(option);
-				if (propertyInfo != null) {
-					return propertyInfo.GetValue(cachedOptions);
+			if (option == IndentationSizePropertyName) {
+				if (indentationSize.HasValue)
+					return indentationSize.Value;
+			} else if (option == ConvertTabsToSpacesPropertyName) {
+				if (convertTabsToSpaces.HasValue)
+					return convertTabsToSpaces.Value;
+			} else {
+				if (activeOptions.Contains(option)) {
+					PropertyInfo propertyInfo = typeof(CSharpFormattingOptions).GetProperty(option);
+					if (propertyInfo != null) {
+						return propertyInfo.GetValue(cachedOptions);
+					}
 				}
 			}
 			
@@ -221,6 +209,68 @@ namespace CSharpBinding.FormattingStrategy
 			return null;
 		}
 		
+		public int? IndentationSize
+		{
+			get {
+				return indentationSize;
+			}
+			set {
+				indentationSize = value;
+				OnPropertyChanged(IndentationSizePropertyName);
+			}
+		}
+		
+		/// <summary>
+		/// Retrieves the value of "IndentationSize" option by looking at current and (if nothing set here) parent
+		/// containers.
+		/// </summary>
+		public int? GetEffectiveIndentationSize()
+		{
+			// Run up the hierarchy until we find a defined value for property
+			CSharpFormattingOptionsContainer container = this;
+			do
+			{
+				int? val = container.indentationSize;
+				if (val.HasValue) {
+					return val.Value;
+				}
+				container = container.parent;
+			} while (container != null);
+			
+			return null;
+		}
+		
+		public bool? ConvertTabsToSpaces
+		{
+			get {
+				return convertTabsToSpaces;
+			}
+			set {
+				convertTabsToSpaces = value;
+				OnPropertyChanged(ConvertTabsToSpacesPropertyName);
+			}
+		}
+		
+		/// <summary>
+		/// Retrieves the value of v option by looking at current and (if nothing set here) parent
+		/// containers.
+		/// </summary>
+		public bool? GetEffectiveConvertTabsToSpaces()
+		{
+			// Run up the hierarchy until we find a defined value for property
+			CSharpFormattingOptionsContainer container = this;
+			do
+			{
+				bool? val = container.convertTabsToSpaces;
+				if (val.HasValue) {
+					return val.Value;
+				}
+				container = container.parent;
+			} while (container != null);
+			
+			return null;
+		}
+		
 		/// <summary>
 		/// Sets an option.
 		/// </summary>
@@ -230,18 +280,32 @@ namespace CSharpBinding.FormattingStrategy
 		{
 			if (value != null) {
 				// Save value in option values and cached options
-				activeOptions.Add(option);
-				PropertyInfo propertyInfo = typeof(CSharpFormattingOptions).GetProperty(option);
-				if ((propertyInfo != null) && (propertyInfo.PropertyType == value.GetType())) {
-					propertyInfo.SetValue(cachedOptions, value);
+				if (option == IndentationSizePropertyName) {
+					if (value is int)
+						indentationSize = (int) value;
+				} else if (option == ConvertTabsToSpacesPropertyName) {
+					if (value is bool)
+						convertTabsToSpaces = (bool) value;
+				} else {
+					activeOptions.Add(option);
+					PropertyInfo propertyInfo = typeof(CSharpFormattingOptions).GetProperty(option);
+					if ((propertyInfo != null) && (propertyInfo.PropertyType == value.GetType())) {
+						propertyInfo.SetValue(cachedOptions, value);
+					}
 				}
 			} else {
 				// Reset this option
-				activeOptions.Remove(option);
-				// Update formatting options object from parents
-				PropertyInfo propertyInfo = typeof(CSharpFormattingOptions).GetProperty(option);
-				if (propertyInfo != null) {
-					propertyInfo.SetValue(cachedOptions, GetEffectiveOption(option));
+				if (option == IndentationSizePropertyName) {
+					indentationSize = null;
+				} else if (option == ConvertTabsToSpacesPropertyName) {
+					convertTabsToSpaces = null;
+				} else {
+					activeOptions.Remove(option);
+					// Update formatting options object from parents
+					PropertyInfo propertyInfo = typeof(CSharpFormattingOptions).GetProperty(option);
+					if (propertyInfo != null) {
+						propertyInfo.SetValue(cachedOptions, GetEffectiveOption(option));
+					}
 				}
 			}
 			OnPropertyChanged(option);
@@ -254,6 +318,11 @@ namespace CSharpBinding.FormattingStrategy
 		/// <returns>Option's type.</returns>
 		public Type GetOptionType(string option)
 		{
+			if (option == IndentationSizePropertyName)
+				return typeof(int);
+			if (option == ConvertTabsToSpacesPropertyName)
+				return typeof(bool);
+			
 			PropertyInfo propertyInfo = typeof(CSharpFormattingOptions).GetProperty(option);
 			if (propertyInfo != null) {
 				return propertyInfo.PropertyType;
@@ -293,26 +362,39 @@ namespace CSharpBinding.FormattingStrategy
 			return outputOptions;
 		}
 		
+		public void CustomizeEditorOptions(TextEditorOptions editorOptions)
+		{
+			int? indentationSize = GetEffectiveIndentationSize();
+			if (indentationSize.HasValue) {
+				editorOptions.IndentSize = indentationSize.Value;
+				editorOptions.TabSize = indentationSize.Value;
+				editorOptions.ContinuationIndent = indentationSize.Value;
+			}
+			bool? convertTabsToSpaces = GetEffectiveConvertTabsToSpaces();
+			if (convertTabsToSpaces.HasValue)
+				editorOptions.TabsToSpaces = convertTabsToSpaces.Value;
+		}
+		
 		public void Load(Properties parentProperties)
 		{
 			if (parentProperties == null)
 				throw new ArgumentNullException("parentProperties");
 			
-			Properties formatProperties = parentProperties.NestedProperties("CSharpFormatting");
-			if (formatProperties != null) {
-				foreach (var key in formatProperties.Keys) {
-					try {
-						object val = formatProperties.Get(key, (object) null);
-						SetOption(key, val);
-					} catch (Exception) {
-						// Silently ignore loading error, then this property will be "as parent" automatically
+			if (parentProperties.Contains("CSharpFormatting")) {
+				Properties formatProperties = parentProperties.NestedProperties("CSharpFormatting");
+				if (formatProperties != null) {
+					foreach (var key in formatProperties.Keys) {
+						try {
+							object val = formatProperties.Get(key, (object)null);
+							SetOption(key, val);
+						} catch (Exception) {
+							// Silently ignore loading error, then this property will be "as parent" automatically
+						}
 					}
 				}
-				if (formatProperties.Contains(AutoFormattingOptionName)) {
-					autoFormatting = formatProperties.Get(AutoFormattingOptionName, true);
-				} else {
-					autoFormatting = null;
-				}
+				
+				indentationSize = formatProperties.Get(IndentationSizePropertyName, new int?());
+				convertTabsToSpaces = formatProperties.Get(ConvertTabsToSpacesPropertyName, new bool?());
 			}
 		}
 		
@@ -329,12 +411,10 @@ namespace CSharpBinding.FormattingStrategy
 					formatProperties.Set(activeOption, val);
 				}
 			}
-			if (formatProperties.Contains(AutoFormattingOptionName) && !autoFormatting.HasValue) {
-				// AutoFormatting options was activated previously, remove it now
-				formatProperties.Remove(AutoFormattingOptionName);
-			} else {
-				formatProperties.Set(AutoFormattingOptionName, autoFormatting);
-			}
+			if (indentationSize.HasValue)
+				formatProperties.Set(IndentationSizePropertyName, indentationSize.Value);
+			if (convertTabsToSpaces.HasValue)
+				formatProperties.Set(ConvertTabsToSpacesPropertyName, convertTabsToSpaces.Value);
 			
 			parentProperties.SetNestedProperties("CSharpFormatting", formatProperties);
 		}

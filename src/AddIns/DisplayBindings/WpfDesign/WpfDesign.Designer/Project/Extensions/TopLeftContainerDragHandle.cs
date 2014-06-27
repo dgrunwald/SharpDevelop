@@ -32,16 +32,10 @@ namespace ICSharpCode.WpfDesign.Designer.Extensions
 {
 	
 	/// <summary>
-	/// The drag handle displayed for panels.
+	/// The drag handle displayed for Framework Elements
 	/// </summary>
-	[ExtensionServer(typeof(PrimarySelectionExtensionServer))]
-	[ExtensionFor(typeof(Panel))]
-	[ExtensionFor(typeof(Image))]
-	[ExtensionFor(typeof(MediaElement))]
-	[ExtensionFor(typeof(ItemsControl))]
-	[ExtensionFor(typeof(Border))]
-	[ExtensionFor(typeof(Viewbox))]
-	[ExtensionFor(typeof(ContentControl))]
+	[ExtensionServer(typeof(OnlyOneItemSelectedExtensionServer))]
+	[ExtensionFor(typeof(FrameworkElement))]
 	public class TopLeftContainerDragHandle : AdornerProvider
 	{
 		/// <summary/>
@@ -50,9 +44,9 @@ namespace ICSharpCode.WpfDesign.Designer.Extensions
 			ContainerDragHandle rect = new ContainerDragHandle();
 			
 			rect.PreviewMouseDown += delegate(object sender, MouseButtonEventArgs e) {
-				Services.Selection.SetSelectedComponents(new DesignItem[] { this.ExtendedItem }, SelectionTypes.Auto);
+				//Services.Selection.SetSelectedComponents(new DesignItem[] { this.ExtendedItem }, SelectionTypes.Auto);
 				new DragMoveMouseGesture(this.ExtendedItem, false).Start(this.ExtendedItem.Services.DesignPanel,e);
-				e.Handled=true;                                                  
+				e.Handled=true;
 			};
 			
 			RelativePlacement p = new RelativePlacement(HorizontalAlignment.Left, VerticalAlignment.Top);

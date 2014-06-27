@@ -94,8 +94,8 @@ namespace ICSharpCode.WpfDesign.Designer.OutlineView
 		
 		public static void OnIsSelectedChanged(DependencyObject s, DependencyPropertyChangedEventArgs e)
 		{
-			var el = s as FrameworkElement;
-			if (el != null)
+			var el = s as DragTreeViewItem;
+			if (el != null && el.IsSelected)
 				el.BringIntoView();
 		}
 
@@ -159,7 +159,10 @@ namespace ICSharpCode.WpfDesign.Designer.OutlineView
 		protected override void OnMouseLeftButtonUp(MouseButtonEventArgs e)
 		{
 			base.OnMouseLeftButtonUp(e);
-			ParentTree.ItemMouseUp(this);
+			
+			if (ParentTree != null) {
+				ParentTree.ItemMouseUp(this);
+			}
 		}
 	}
 }

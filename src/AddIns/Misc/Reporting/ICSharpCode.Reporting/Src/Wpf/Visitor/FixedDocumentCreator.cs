@@ -40,7 +40,6 @@ namespace ICSharpCode.Reporting.WpfReportViewer.Visitor
 	static class FixedDocumentCreator
 	{
 		
-		
 		public static FixedPage CreateFixedPage(ExportPage exportPage) {
 			var fixedPage = new FixedPage();
 			fixedPage.Width = exportPage.Size.ToWpf().Width;
@@ -53,103 +52,75 @@ namespace ICSharpCode.Reporting.WpfReportViewer.Visitor
 		public static Canvas CreateContainer(ExportContainer container)	{
 			var canvas = CreateCanvas(container);
 			var size = container.DesiredSize.ToWpf();
+			CanvasHelper.SetPosition(canvas,new Point(container.Location.X,container.Location.Y));
 			canvas.Measure(size);
 			canvas.Arrange(new Rect(new Point(),size ));
 			canvas.UpdateLayout();
 			return canvas;
 		}
-
-		/*
-		public static TextBlock CreateTextBlock(ExportText exportText,bool setBackcolor){
-			
-			var textBlock = new TextBlock();
-
-			textBlock.Foreground = ConvertBrush(exportText.ForeColor);
-			
-			if (setBackcolor) {
-				textBlock.Background = ConvertBrush(exportText.BackColor);
-			}
-			 
-			SetFont(textBlock,exportText);
-			
-			textBlock.TextWrapping = TextWrapping.Wrap;
-			
-			CheckForNewLine (textBlock,exportText);
-			SetContentAlignment(textBlock,exportText);
-			MeasureTextBlock (textBlock,exportText);
-			return textBlock;
-		}
-		*/
-		
-		/*
-		static void CheckForNewLine(TextBlock textBlock,ExportText exportText) {
-			string [] inlines = exportText.Text.Split(Environment.NewLine.ToCharArray());
-			for (int i = 0; i < inlines.Length; i++) {
-				if (inlines[i].Length > 0) {
-					textBlock.Inlines.Add(new Run(inlines[i]));
-					textBlock.Inlines.Add(new LineBreak());
-				}
-			}
-			var li = textBlock.Inlines.LastInline;
-			textBlock.Inlines.Remove(li);
-		}
-		
-		
-		static void MeasureTextBlock(TextBlock textBlock,ExportText exportText)
-		{
-			var wpfSize = MeasureTextInWpf(exportText);
-			textBlock.Width = wpfSize.Width;
-			textBlock.Height = wpfSize.Height;
-		}	
-		
-		*/
-		
-		/*
-		static Size MeasureTextInWpf(ExportText exportText){
-			
-			if (exportText.CanGrow) {
-				var formattedText = NewMethod(exportText);
-				
-				formattedText.MaxTextWidth = exportText.DesiredSize.Width * 96.0 / 72.0;
-				
-				formattedText.SetFontSize(Math.Floor(exportText.Font.Size  * 96.0 / 72.0));
-				
-				var size = new Size {
-					Width = formattedText.WidthIncludingTrailingWhitespace,
-					Height = formattedText.Height + 6};
-				return size;
-			}
-			return new Size(exportText.Size.Width,exportText.Size.Height);
-		}
-
-		*/
 		
 		
 		public static FormattedText CreateFormattedText(ExportText exportText)
 		{
+			var culture = CultureInfo.CurrentCulture;
+			var flowDirection = culture.TextInfo.IsRightToLeft ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
+			
+			var emSize = ExtensionMethodes.ToPoints((int)exportText.Font.SizeInPoints +1);
+			
 			var formattedText = new FormattedText(exportText.Text,
 				CultureInfo.CurrentCulture,
-				FlowDirection.LeftToRight,
+				flowDirection,
 				new Typeface(exportText.Font.FontFamily.Name),
-				exportText.Font.Size,
+				emSize,
 				new SolidColorBrush(exportText.ForeColor.ToWpf()), null, TextFormattingMode.Display);
 			
-			formattedText.MaxTextWidth = exportText.DesiredSize.Width * 96.0 / 72.0;
-			formattedText.SetFontSize(Math.Floor(exportText.Font.Size  * 96.0 / 72.0));
+			formattedText.MaxTextWidth = exportText.DesiredSize.Width ;
+			formattedText.TextAlignment = exportText.TextAlignment;
 			
-			var td = new TextDecorationCollection()	;
-			CheckUnderline(td,exportText);
-			formattedText.SetTextDecorations(td);
+			if (!exportText.CanGrow) {
+				formattedText.MaxTextHeight = exportText.Size.Height;
+			} else {
+				formattedText.MaxTextHeight = ExtensionMethodes.ToPoints(exportText.DesiredSize.Height );
+			}
+			
+			ApplyPrintStyles(formattedText,exportText);
+		
 			return formattedText;
 		}
 
-		static void CheckUnderline(TextDecorationCollection td, ExportText exportText)
-		{
-			if (exportText.Font.Underline) {
-				td.Add(new TextDecoration{Location = TextDecorationLocation.Underline});
+
+		static void ApplyPrintStyles (FormattedText formattedText,ExportText exportText) {
+			var font = exportText.Font;
+			var textDecorations = new TextDecorationCollection();
+			FontStyle fontStyle;
+			FontWeight fontWeight;
+			
+			if ((font.Style & System.Drawing.FontStyle.Italic) != 0) {
+				fontStyle = FontStyles.Italic;
+			} else {
+				fontStyle = FontStyles.Normal;
 			}
+			
+			formattedText.SetFontStyle(fontStyle);
+			
+			if ((font.Style & System.Drawing.FontStyle.Bold) != 0) {
+				fontWeight = FontWeights.Bold;
+			} else {
+				fontWeight = FontWeights.Normal;
+			}
+			formattedText.SetFontWeight(fontWeight);
+			
+			if ((font.Style & System.Drawing.FontStyle.Underline) != 0) {
+				textDecorations.Add(TextDecorations.Underline);
+			}
+			
+			if ((font.Style & System.Drawing.FontStyle.Strikeout) != 0) {
+				textDecorations.Add(TextDecorations.Strikethrough);
+			}
+			
+			formattedText.SetTextDecorations(textDecorations);
 		}
-		
+			
 		
 		static Canvas CreateCanvas(ExportContainer container){
 			var canvas = new Canvas();
@@ -181,102 +152,58 @@ namespace ICSharpCode.Reporting.WpfReportViewer.Visitor
 		}
 		
 		/*
-		static void SetFont(TextBlock textBlock,IExportText exportText){
-			textBlock.FontFamily = new FontFamily(exportText.Font.FontFamily.Name);
-
-			//http://www.codeproject.com/Articles/441009/Drawing-Formatted-Text-in-a-Windows-Forms-Applicat
+		public static Point CalculateAlignmentOffset (FormattedText formattedText, ExportText exportText) {
+			var offset = new Point(0,0);
+			double y = 0;
+			double x = 0;
+			var textLenDif = exportText.Size.Width - formattedText.Width;
+			var textHeightDif = exportText.Size.Height - formattedText.Height;
 			
-			textBlock.FontSize = Math.Floor(exportText.Font.Size * 96/72);
-
-			if (exportText.Font.Bold) {
-				textBlock.FontWeight = FontWeights.Bold;
-			}
-			if (exportText.Font.Underline) {
-				CreateUnderline(textBlock,exportText);
-			}
-			
-			if (exportText.Font.Italic) {
-				textBlock.FontStyle = FontStyles.Italic ;
-			}
-			if (exportText.Font.Strikeout) {
-				CreateStrikeout(textBlock,exportText);
-			}
-		}
-		*/
-		
-		static void SetContentAlignment(TextBlock textBlock,ExportText exportText)
-		{
-	//	http://social.msdn.microsoft.com/Forums/vstudio/en-US/e480abb9-a86c-4f78-8955-dddb866bcfef/vertical-text-alignment-in-textblock?forum=wpf	
-	//Vertical alignment not working
-	
 			switch (exportText.ContentAlignment) {
+				// Top	
 				case System.Drawing.ContentAlignment.TopLeft:
-					textBlock.VerticalAlignment = VerticalAlignment.Top;
-					textBlock.TextAlignment = TextAlignment.Left;
 					break;
+					
 				case System.Drawing.ContentAlignment.TopCenter:
-					textBlock.VerticalAlignment = VerticalAlignment.Top;
-					textBlock.TextAlignment = TextAlignment.Center;
+					x = textLenDif / 2;
 					break;
+					
 				case System.Drawing.ContentAlignment.TopRight:
-					textBlock.VerticalAlignment = VerticalAlignment.Top;
-					textBlock.TextAlignment = TextAlignment.Right;
+					x = textLenDif;
 					break;
+					
 					// Middle
 				case System.Drawing.ContentAlignment.MiddleLeft:
-					textBlock.VerticalAlignment = VerticalAlignment.Center;
-					textBlock.TextAlignment = TextAlignment.Left;
+					y = textHeightDif / 2;
 					break;
+					
 				case System.Drawing.ContentAlignment.MiddleCenter:
-					textBlock.VerticalAlignment = VerticalAlignment.Center;
-					textBlock.TextAlignment = TextAlignment.Center;
+					y = textHeightDif / 2;
+					x = textLenDif / 2;
 					break;
+					
 				case System.Drawing.ContentAlignment.MiddleRight:
-					textBlock.VerticalAlignment = VerticalAlignment.Center;
-					textBlock.TextAlignment = TextAlignment.Right;
+					x = textLenDif;;
+					y = textHeightDif / 2;
 					break;
+					
 					//Bottom
 				case System.Drawing.ContentAlignment.BottomLeft:
-					textBlock.VerticalAlignment = VerticalAlignment.Bottom;
-					textBlock.TextAlignment = TextAlignment.Left;
+					x = 0;
+					y = textHeightDif;
 					break;
+					
 				case System.Drawing.ContentAlignment.BottomCenter:
-					textBlock.VerticalAlignment = VerticalAlignment.Bottom;
-					textBlock.TextAlignment = TextAlignment.Center;
+					x = textLenDif / 2;
+					y = textHeightDif;
 					break;
+					
 				case System.Drawing.ContentAlignment.BottomRight:
-					textBlock.VerticalAlignment = VerticalAlignment.Bottom;
-					textBlock.TextAlignment = TextAlignment.Right;
+					x = textLenDif;
+					y  = textHeightDif;
 					break;
 			}
-		}
-		
-		
-		static void CreateStrikeout (TextBlock textBlock,IExportText exportColumn ){
-			if (textBlock == null)
-				throw new ArgumentNullException("textBlock");
-			if (exportColumn == null)
-				throw new ArgumentNullException("exportColumn");
-			var strikeOut = new TextDecoration();
-			strikeOut.Location = TextDecorationLocation.Strikethrough;
-
-			Pen p = CreateWpfPen(exportColumn);
-			strikeOut.Pen = p ;
-			strikeOut.PenThicknessUnit = TextDecorationUnit.FontRecommended;
-			textBlock.TextDecorations.Add(strikeOut);
-		}
-		
-		/*
-		static void CreateUnderline(TextBlock textBlock,IExportText exportColumn){
-			if (exportColumn == null)
-				throw new ArgumentNullException("exportColumn");
-			if (textBlock == null)
-				throw new ArgumentNullException("textBlock");
-			var underLine = new TextDecoration();
-			Pen p = CreateWpfPen(exportColumn);
-			underLine.Pen = p ;
-			underLine.PenThicknessUnit = TextDecorationUnit.FontRecommended;
-			textBlock.TextDecorations.Add(underLine);
+			return new Point(x,y);
 		}
 		*/
 		
@@ -290,21 +217,21 @@ namespace ICSharpCode.Reporting.WpfReportViewer.Visitor
 			var exportGraphics = exportColumn as IExportGraphics;
 			if (exportGraphics != null) {
 				pen.Thickness = exportGraphics.Thickness;
-				pen.DashStyle = FixedDocumentCreator.DashStyle(exportGraphics);
-				pen.StartLineCap = FixedDocumentCreator.LineCap(exportGraphics.StartLineCap);
-				pen.EndLineCap = FixedDocumentCreator.LineCap(exportGraphics.EndLineCap);
+				pen.DashStyle = DashStyle(exportGraphics);
+				pen.StartLineCap = LineCap(exportGraphics.StartLineCap);
+				pen.EndLineCap = LineCap(exportGraphics.EndLineCap);
 			}
 			return pen;
 		}
 		
 		
-		public static Brush ConvertBrush(System.Drawing.Color color){
+		public static Brush ConvertBrush(System.Drawing.Color color)
+		{
 			var b = new BrushConverter();
-			if (b.IsValid(color.Name)){
+			if (b.IsValid(color.Name)) {
 				return b.ConvertFromString(color.Name) as SolidColorBrush;
-			} else{
-				return b.ConvertFromString("Black") as SolidColorBrush;
 			}
+			return b.ConvertFromString("Black") as SolidColorBrush;
 		}
 		
 		
@@ -350,6 +277,7 @@ namespace ICSharpCode.Reporting.WpfReportViewer.Visitor
 			}
 			return penLineCap;
 		}
+		
 		
 		public static DashStyle DashStyle (IExportGraphics exportGraphics) {
 			var dashStyle = DashStyles.Solid;

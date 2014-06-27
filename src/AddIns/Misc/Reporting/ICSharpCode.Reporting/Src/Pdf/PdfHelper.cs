@@ -21,7 +21,6 @@ using System.Drawing;
 using ICSharpCode.Reporting.Interfaces.Export;
 using ICSharpCode.Reporting.PageBuilder.ExportColumns;
 using PdfSharp.Drawing;
-using System.Drawing.Drawing2D;
 using PdfSharp.Drawing.Layout;
 
 namespace ICSharpCode.Reporting.Pdf
@@ -34,11 +33,12 @@ namespace ICSharpCode.Reporting.Pdf
 		
 		public static void WriteText(XTextFormatter textFormatter,Point columnLocation, ExportText exportColumn)
 		{
-			XFont font = PdfHelper.CreatePdfFont(exportColumn);
+			var font = PdfHelper.CreatePdfFont(exportColumn);
 			var rect = new Rectangle(columnLocation,exportColumn.DesiredSize).ToXRect();
+			textFormatter.Alignment = XParagraphAlignment(exportColumn);
 			textFormatter.DrawString(exportColumn.Text,
 			                         font,
-			                         new XSolidBrush(ToXColor(exportColumn.ForeColor)),
+			                         CreateBrush(exportColumn.ForeColor),
 			                         rect, XStringFormats.TopLeft);
 		}
 		
@@ -76,9 +76,36 @@ namespace ICSharpCode.Reporting.Pdf
 		}
 		
 		
+		public static XPen CreateDashedPen(IExportGraphics exportRectangle)
+		{
+			var pen = PdfHelper.PdfPen(exportRectangle);
+			pen.DashStyle = PdfHelper.DashStyle(exportRectangle);
+			return pen;
+		}
+		
+		
+		public static XSolidBrush CreateBrush(Color color) {
+			return new XSolidBrush(color);
+		}
+		
+		
 		public static XLineCap LineCap (IExportGraphics column) {
 			return XLineCap.Round;
-			
+		}
+		
+		
+		public static XParagraphAlignment XParagraphAlignment (ExportText exportColumn) {
+			switch (exportColumn.TextAlignment) {
+				case System.Windows.TextAlignment.Left:
+					return PdfSharp.Drawing.Layout.XParagraphAlignment.Left;
+				case System.Windows.TextAlignment.Center:
+					return PdfSharp.Drawing.Layout.XParagraphAlignment.Center;
+				case System.Windows.TextAlignment.Right:
+					return PdfSharp.Drawing.Layout.XParagraphAlignment.Center;
+				case System.Windows.TextAlignment.Justify:
+					return PdfSharp.Drawing.Layout.XParagraphAlignment.Justify;
+			}
+			return PdfSharp.Drawing.Layout.XParagraphAlignment.Left;
 		}
 		
 		

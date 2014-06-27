@@ -41,8 +41,12 @@ namespace ICSharpCode.Reporting.Xml
 	/// <summary>
 	/// See http://www.codeproject.com/dotnet/MycroXaml.asp
 	/// </summary>
-	internal abstract class MycroParser
+	public abstract class MycroParser
 	{
+		public MycroParser() {
+		}
+		
+		
 		public object Load(XmlElement element)
 		{
 			return ProcessNode(element, null);
@@ -50,7 +54,7 @@ namespace ICSharpCode.Reporting.Xml
 
 		protected abstract Type GetTypeByName(string ns, string name);
 
-	    private object ProcessNode(XmlNode node, object parent)
+	    object ProcessNode(XmlNode node, object parent)
 		{
 			object ret=null;
 			if (node is XmlElement)
@@ -59,10 +63,8 @@ namespace ICSharpCode.Reporting.Xml
 				string ns=node.Prefix;
 				string cname=node.LocalName;
 				
-				Console.WriteLine ("ProcessNode(XmlNode node, object parent)  {0}",cname);
-			
 				Type t=GetTypeByName(ns, cname);
-			
+				
 //				Trace.Assert(t != null, "Type "+cname+" could not be determined.");
 //				Debug.WriteLine("Looking for " + cname + " and got " + t.FullName);
 //				Console.WriteLine("Looking for " + cname + " and got " + t.FullName);
@@ -73,8 +75,7 @@ namespace ICSharpCode.Reporting.Xml
 				catch(Exception)
 				{
 					Console.WriteLine("MycroParser:");
-					Console.WriteLine("\t Not found {0}",cname);
-//					Trace.Fail("Type "+cname+" could not be instantiated:\r\n"+e.Message);
+					Console.WriteLine("\t Not found {0} - {0}",cname);
 				}
 
 				// support the ISupportInitialize interface
@@ -118,7 +119,7 @@ namespace ICSharpCode.Reporting.Xml
 			{
 			    if (!(child is XmlElement)) continue;
 			    string pname=child.LocalName;
-			
+	
 			    var pi=t.GetProperty(pname);
 
 			    if (pi==null)
@@ -195,7 +196,7 @@ namespace ICSharpCode.Reporting.Xml
 			}
 		}
 
-	    private void ProcessAttributes(XmlNode node, object ret, Type type)
+	   static  void ProcessAttributes(XmlNode node, object ret, Type type)
 		{
 			// process attributes
 			foreach(XmlAttribute attr in node.Attributes)

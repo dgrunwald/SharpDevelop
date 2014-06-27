@@ -19,7 +19,6 @@
 using System;
 using ICSharpCode.Reporting.Globals;
 using ICSharpCode.Reporting.Interfaces;
-using ICSharpCode.Reporting.Items;
 using ICSharpCode.Reporting.PageBuilder;
 
 namespace ICSharpCode.Reporting.Factories
@@ -27,7 +26,7 @@ namespace ICSharpCode.Reporting.Factories
 	/// <summary>
 	/// Description of ReportCreatorFactory.
 	/// </summary>
-	internal  class ReportCreatorFactory {
+	static class ReportCreatorFactory {
 		
 		public static IReportCreator ExporterFactory(IReportModel reportModel)
 		{
